@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/*
+ * Seattle Neighborhood Pulse — design tokens.
+ * Neutral "fog" canvas and slate ink, one data hue (Puget Sound teal),
+ * and a single accent (ferry orange) reserved for the selected request.
+ * Data colors were checked with a CVD/contrast validator.
+ */
+@theme {
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-source-serif), ui-serif, Georgia, serif;
+
+  --color-canvas: #f5f4f0;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9f8f5;
+  --color-line: #e2e0d9;
+  --color-line-strong: #cfccc2;
+
+  --color-ink: #13222c;
+  --color-ink-muted: #45535d;
+  --color-ink-subtle: #5f6b74;
+
+  --color-sound: #00789a;
+  --color-sound-strong: #005f7a;
+  --color-sound-deep: #063f57;
+  --color-sound-soft: #e2f1f5;
+  --color-sound-muted: #9fd3df;
+
+  --color-ferry: #d9622b;
+  --color-ferry-soft: #fbeae1;
+
+  --color-alert: #a8321e;
+  --color-alert-soft: #fbece8;
+}
+
+html {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-sound-strong);
+  outline-offset: 2px;
+}
+
+/* MapLibre controls: match the product's quiet chrome. */
+.maplibregl-ctrl-group {
+  border-radius: 8px !important;
+  box-shadow: 0 1px 2px rgb(19 34 44 / 0.12) !important;
+  border: 1px solid var(--color-line);
+}
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
+.maplibregl-canvas:focus-visible {
+  outline: 2px solid var(--color-sound-strong);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

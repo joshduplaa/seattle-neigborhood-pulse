@@ -1,0 +1,285 @@
+{
+  "_source": "https://data.seattle.gov/resource/5ngg-rpne.json, captured 2026-10-20, created 2026-10-12..2026-10-18",
+  "sample": [
+    {
+      "servicerequestnumber": "26-00314776",
+      "webintakeservicerequests": "Pothole",
+      "departmentname": "SDOT-Seattle Department of Transportation",
+      "createddate": "2026-10-18T23:36:10.000",
+      "methodreceivedname": "Citizen Web Intake App",
+      "servicerequeststatusname": "Reported",
+      "location": "300 NE 65TH ST, SEATTLE, WA 98115",
+      "latitude": "47.67604228",
+      "longitude": "-122.32549433",
+      "zipcode": "98115",
+      "councildistrict": "6",
+      "policeprecinct": "NORTH",
+      "community_reporting_area": "GREEN LAKE"
+    },
+    {
+      "servicerequestnumber": "26-00314775",
+      "webintakeservicerequests": "Abandoned Vehicle/72hr Parking Ordinance",
+      "departmentname": "SPD-Seattle Police Department",
+      "createddate": "2026-10-18T23:28:08.000",
+      "methodreceivedname": "Find It Fix It Apps",
+      "servicerequeststatusname": "Open",
+      "location": "1736 BELMONT AVE, SEATTLE, WA 98122",
+      "latitude": "47.61745402",
+      "longitude": "-122.32431068",
+      "zipcode": "98122",
+      "councildistrict": "3",
+      "policeprecinct": "EAST",
+      "community_reporting_area": "CAPITOL HILL"
+    },
+    {
+      "servicerequestnumber": "26-00314774",
+      "webintakeservicerequests": "Abandoned Vehicle/72hr Parking Ordinance",
+      "departmentname": "SPD-Seattle Police Department",
+      "createddate": "2026-10-18T23:26:09.000",
+      "methodreceivedname": "Find It Fix It Apps",
+      "servicerequeststatusname": "Open",
+      "location": "1915 N 37TH ST, SEATTLE, WA 98103",
+      "latitude": "47.65180667",
+      "longitude": "-122.33437874",
+      "zipcode": "98103",
+      "councildistrict": "4",
+      "policeprecinct": "NORTH",
+      "community_reporting_area": "FREMONT"
+    },
+    {
+      "servicerequestnumber": "26-00314773",
+      "webintakeservicerequests": "Scooter or Bike Share Issue",
+      "departmentname": "SDOT-Seattle Department of Transportation",
+      "createddate": "2026-10-18T23:08:08.000",
+      "methodreceivedname": "Find It Fix It Apps",
+      "servicerequeststatusname": "Closed",
+      "location": "110 24TH AVE E, SEATTLE, WA 98112",
+      "latitude": "47.61949036",
+      "longitude": "-122.3010131",
+      "zipcode": "98112",
+      "councildistrict": "3",
+      "policeprecinct": "EAST",
+      "community_reporting_area": "CENTRAL AREA/SQUIRE PARK"
+    },
+    {
+      "servicerequestnumber": "26-00314772",
+      "webintakeservicerequests": "Unauthorized Encampment",
+      "departmentname": "SEA-City of Seattle",
+      "createddate": "2026-10-18T22:58:07.000",
+      "methodreceivedname": "Find It Fix It Apps",
+      "servicerequeststatusname": "Open",
+      "location": "612 7TH AVE S, SEATTLE, WA 98104",
+      "latitude": "47.5970688",
+      "longitude": "-122.32348814",
+      "zipcode": "98104",
+      "councildistrict": "2",
+      "policeprecinct": "WEST",
+      "community_reporting_area": "PIONEER SQUARE/INTERNATIONAL DISTRICT"
+    },
+    {
+      "servicerequestnumber": "26-00314771",
+      "webintakeservicerequests": "Unauthorized Encampment",
+      "departmentname": "SEA-City of Seattle",
+      "createddate": "2026-10-18T22:54:07.000",
+      "methodreceivedname": "Find It Fix It Apps",
+      "servicerequeststatusname": "Open",
+      "location": "9267 RENTON AVE S, SEATTLE, WA 98118",
+      "latitude": "47.51942056",
+      "longitude": "-122.27218664",
+      "zipcode": "98118",
+      "councildistrict": "2",
+      "policeprecinct": "SOUTH",
+      "community_reporting_area": "SOUTH BEACON HILL/NEWHOLLY"
+    },
+    {
+      "servicerequestnumber": "26-00307155",
+      "webintakeservicerequests": "Nightlife Noise Complaint",
+      "departmentname": "FAS-Finance and Administrative Services",
+      "createddate": "2026-10-12T02:42:35.000",
+      "methodreceivedname": "Citizen Web Intake App",
+      "servicerequeststatusname": "Closed"
+    },
+    {
+      "servicerequestnumber": "26-00307364",
+      "webintakeservicerequests": "General Inquiry - Police Department",
+      "departmentname": "SPD-Seattle Police Department",
+      "createddate": "2026-10-12T10:37:00.000",
+      "methodreceivedname": "Citizen Web Intake App",
+      "servicerequeststatusname": "New"
+    },
+    {
+      "servicerequestnumber": "26-00307307",
+      "webintakeservicerequests": "General Inquiry - Customer Service Bureau",
+      "departmentname": "FAS-Finance and Administrative Services",
+      "createddate": "2026-10-12T09:30:55.000",
+      "methodreceivedname": "Find It Fix It Apps",
+      "servicerequeststatusname": "Transferred to Other Dept",
+      "location": "11600 26TH AVE SW, BURIEN, WA 98146",
+      "latitude": "47.4990525",
+      "longitude": "-122.36543214",
+      "zipcode": "98146"
+    }
+  ],
+  "statusFacet": [
+    {
+      "value": "Open",
+      "n": "3331"
+    },
+    {
+      "value": "Closed",
+      "n": "2227"
+    },
+    {
+      "value": "Reported",
+      "n": "486"
+    },
+    {
+      "value": "New",
+      "n": "441"
+    },
+    {
+      "value": "Transferred to Other Dept",
+      "n": "211"
+    },
+    {
+      "value": "Duplicate (Open)",
+      "n": "68"
+    },
+    {
+      "value": "Duplicate (Closed)",
+      "n": "49"
+    },
+    {
+      "value": "Closed as Duplicate",
+      "n": "15"
+    },
+    {
+      "value": "Canceled",
+      "n": "1"
+    },
+    {
+      "value": "Closed -Incomplete Information",
+      "n": "1"
+    }
+  ],
+  "districtFacet": [
+    {
+      "value": "3",
+      "n": "1213"
+    },
+    {
+      "value": "6",
+      "n": "1076"
+    },
+    {
+      "value": "7",
+      "n": "1040"
+    },
+    {
+      "value": "2",
+      "n": "926"
+    },
+    {
+      "value": "1",
+      "n": "911"
+    },
+    {
+      "value": "4",
+      "n": "874"
+    },
+    {
+      "value": "5",
+      "n": "666"
+    },
+    {
+      "n": "124"
+    }
+  ],
+  "daily": [
+    {
+      "day": "2026-10-12T00:00:00.000",
+      "n": "861"
+    },
+    {
+      "day": "2026-10-13T00:00:00.000",
+      "n": "1290"
+    },
+    {
+      "day": "2026-10-14T00:00:00.000",
+      "n": "1174"
+    },
+    {
+      "day": "2026-10-15T00:00:00.000",
+      "n": "1117"
+    },
+    {
+      "day": "2026-10-16T00:00:00.000",
+      "n": "976"
+    },
+    {
+      "day": "2026-10-17T00:00:00.000",
+      "n": "652"
+    },
+    {
+      "day": "2026-10-18T00:00:00.000",
+      "n": "760"
+    }
+  ],
+  "grid": [
+    {
+      "cell": {
+        "type": "Point",
+        "coordinates": [
+          -122.35,
+          47.615
+        ]
+      },
+      "n": "114"
+    },
+    {
+      "cell": {
+        "type": "Point",
+        "coordinates": [
+          -122.32,
+          47.615
+        ]
+      },
+      "n": "97"
+    },
+    {
+      "cell": {
+        "type": "Point",
+        "coordinates": [
+          -122.31,
+          47.665
+        ]
+      },
+      "n": "95"
+    },
+    {
+      "cell": {
+        "type": "Point",
+        "coordinates": [
+          -122.345,
+          47.615
+        ]
+      },
+      "n": "88"
+    },
+    {
+      "cell": {
+        "type": "Point",
+        "coordinates": [
+          -122.32,
+          47.6
+        ]
+      },
+      "n": "86"
+    }
+  ],
+  "newest": [
+    {
+      "newest": "2026-10-20T02:33:06.000"
+    }
+  ]
+}
