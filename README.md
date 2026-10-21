@@ -20,6 +20,7 @@ This is an exercise in agentic development using Claude Code.
 - **Summary metrics:** total requests, daily average, most reported type, and the share with usable coordinates.
 - **Period-over-period change:** the total and every neighborhood/district bar show the change versus the equally long period just before, with the same filters (e.g. "▼ −2.0% vs Aug 21 – Sep 19"). When the previous count is under 20, the absolute change is shown instead of a volatile percentage. Changes use neutral arrows, not red/green, because more reports isn't necessarily worse.
 - **Trends:** requests per day, week (Mon–Sun) or month, chosen from the range length. Days with no requests are zero-filled, and buckets cut short by the range are drawn dashed and labelled.
+- **Response times:** for the five request types the City tracks (abandoned vehicles, graffiti, illegal dumping, public litter cans, streetlights), the share that got a "Closed" status update within 7 and 30 days and the median days. Measured on a cohort old enough to judge, so recent requests can't skew it.
 - **Breakdowns:** request types, current status, and an area comparison by neighborhood or council district. Neighborhoods can be compared by raw count or **per 1,000 residents** (2020 Census). Areas with fewer than 5,000 residents are listed separately rather than ranked, because their rates aren't comparable. Each bar is a keyboard-accessible button that toggles that filter.
 
   The count / per-capita choice drives the map shading too.
@@ -62,6 +63,21 @@ No API key or database is needed. Optionally, copy `.env.example` to `.env.local
 
 All dataset constants live in [`src/lib/socrata/config.ts`](src/lib/socrata/config.ts).
 
+### Response times (five request types)
+
+| | |
+| --- | --- |
+| Dataset | [Customer Service Request Tracking Data](https://data.seattle.gov/d/43nw-pkdq) (`43nw-pkdq`), City of Seattle |
+| Coverage | ~446,500 requests since 2023-01-01: Abandoned Vehicle, Graffiti Report, Illegal Dumping, Public Place Litter & Recycling, Streetlight Repair |
+| Fields used | `servicerequestnumber`, `servicerequesttype`, `createddate`, `updateddate`, `statuscategory` (`Routed to Department` / `In Progress` / `Closed`) |
+
+How it's measured:
+- **One cohort:** requests created in a window that ended at least 30 days before the data ends, so every request has had 30 days to close. If your range is too recent, the window moves back to the latest equally long period that qualifies, and the panel says so.
+- **Per type:** the share whose first `Closed` update came within 7 days and within 30 days, plus the median days. Requests never closed stay in the denominator.
+- **Computed server-side** with a chained SoQL query (`… GROUP BY servicerequestnumber |> SELECT date_diff_d(u, c) …`); no per-request rows are downloaded.
+- **Type mapping verified:** names differ between the two datasets (e.g. "Graffiti Report" vs "Graffiti"). Looking up 1,000 shared request numbers found 997 in both, each type mapping one-to-one ([`TRACKED_TYPES`](src/lib/socrata/config.ts)).
+- **Cross-checked** against a hand computation for the August 2026 cohort, e.g. abandoned vehicles: 5,869 requests, 44.1% closed within 7 days, 85.1% within 30, median 9 days.
+
 ### Neighborhood boundaries and population
 
 | | |
@@ -77,7 +93,7 @@ All 53 area names match the requests dataset's `community_reporting_area` values
 
 - **Fields used:** `servicerequestnumber`, `webintakeservicerequests` (request type), `departmentname`, `createddate`, `methodreceivedname`, `servicerequeststatusname`, `location` (address), `latitude`/`longitude`, `latitude_longitude` (point), `zipcode`, `councildistrict`, `policeprecinct` and `community_reporting_area`.
 - **Dates:** `createddate` is a *floating* timestamp (no UTC offset) in Seattle local time. The app treats it as a local calendar date and never shifts it through a timezone.
-- **No resolution timestamp.** The dataset has only the current status, so the app does **not** compute or imply time-to-close. (A separate tracking dataset, `43nw-pkdq`, logs status updates, but only for five request types. It was not used.)
+- **No resolution timestamp.** The dataset has only the current status, so time-to-close is never inferred from it. Response times come only from the tracking dataset below, and only for the five types it covers.
 - **Statuses** (10 values): `Closed`, `Open`, `Reported`, `New`, `Transferred to Other Dept`, `Duplicate (Closed)`, `Duplicate (Open)`, `Closed as Duplicate`, `Closed -Incomplete Information`, `Canceled`. They are shown verbatim, not regrouped.
 - **Geography:** 53 Community Reporting Areas (the City's neighborhood-scale planning unit), 7 council districts, ZIP codes and police precincts. These are different boundaries, so the app labels each comparison with its unit and never treats one as another.
 - **Data quality, last 90 days:** about 1.2% of rows lack coordinates and about 1.6% lack a Community Reporting Area. Across all years, 77,909 rows lack coordinates. No coordinates were found outside Seattle, but values outside a Seattle bounding box are still treated as invalid rather than plotted.
@@ -151,7 +167,7 @@ src/
 
 - **Counts are reports, not problems.** Several residents may report one issue; the duplicate statuses capture only some of these.
 - **Per-capita rates are approximate.** They use 2020 Census residents. Requests also come from workers and visitors, so commercial areas still rank high, and areas under 5,000 residents aren't ranked. Council districts have no population data here, so their comparison is counts only.
-- **No resolution times.** The dataset has no closed date, and status is current status only.
+- **Response times cover five request types only**, measured to the City's first "Closed" status update. "Closed" includes duplicates, vehicles that couldn't be located or had moved, and reports forwarded elsewhere, so it isn't proof of a fix. Dates are whole days, and created dates are approximate in the tracking data. Neighborhood, district and status filters don't apply to this panel.
 - **Markers are a sample** (newest 2,000 matching requests). The density layer and every count use the full data.
 - **Boundaries are simplified** to about 10 m for size, so edges are approximate at street level.
 - **Freshness depends on the City.** The source updates about once a day. "Source updated" is the API's `Last-Modified` header.

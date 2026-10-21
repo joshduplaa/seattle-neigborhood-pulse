@@ -21,6 +21,13 @@ describe("querySocrata", () => {
     expect((init.headers as Record<string, string>)["X-App-Token"]).toBeUndefined();
   });
 
+  it("can target another dataset's resource URL", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse([]));
+    await querySocrata({ $query: "SELECT 1" }, { fetchImpl, resourceUrl: "https://data.seattle.gov/resource/43nw-pkdq.json" });
+    const [url] = fetchImpl.mock.calls[0] as unknown as [string];
+    expect(url.startsWith("https://data.seattle.gov/resource/43nw-pkdq.json?%24query=")).toBe(true);
+  });
+
   it("sends an app token when configured", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse([]));
     await querySocrata({}, { fetchImpl, appToken: "token123" });

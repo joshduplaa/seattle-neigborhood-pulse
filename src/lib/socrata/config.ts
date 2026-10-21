@@ -55,3 +55,27 @@ export const SAMPLE_LIMIT = 2000;
 export const GRID_RESOLUTION = 0.005;
 
 export const REQUEST_TIMEOUT_MS = 20_000;
+
+/**
+ * Customer Service Request Tracking Data: dated status updates for five
+ * request types (2023 onward). Dates are day-precision; `createddate` is
+ * documented as approximate.
+ * Portal page: https://data.seattle.gov/d/43nw-pkdq
+ */
+export const TRACKING_DATASET_ID = "43nw-pkdq";
+export const TRACKING_DATASET_NAME = "Customer Service Request Tracking Data";
+export const TRACKING_PAGE_URL = `https://${SOCRATA_DOMAIN}/d/${TRACKING_DATASET_ID}`;
+export const TRACKING_RESOURCE_URL = `https://${SOCRATA_DOMAIN}/resource/${TRACKING_DATASET_ID}.json`;
+
+/**
+ * Tracked types and their names in the requests dataset. Verified on
+ * 2026-10-20 by looking up 1,000 shared request numbers: 997 were found
+ * in both datasets, each type mapping one-to-one.
+ */
+export const TRACKED_TYPES = [
+  { tracking: "Abandoned Vehicle", request: "Abandoned Vehicle/72hr Parking Ordinance", label: "Abandoned vehicles" },
+  { tracking: "Graffiti Report", request: "Graffiti", label: "Graffiti" },
+  { tracking: "Illegal Dumping", request: "Illegal Dumping / Needles", label: "Illegal dumping" },
+  { tracking: "Public Place Litter & Recycling", request: "Public Litter and Recycling Cans", label: "Public litter & recycling cans" },
+  { tracking: "Streetlight Repair", request: "Streetlight Maintenance", label: "Streetlights" },
+] as const;
