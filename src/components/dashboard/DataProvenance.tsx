@@ -89,8 +89,8 @@ export function DataProvenance({ data }: { data: DashboardData | null }) {
               {formatCount(data?.sample.limit ?? 2000)} matching requests, so they are a sample, not the full picture.
             </li>
             <li>
-              Dates are when a request was <em>created</em>, in Seattle time. The dataset has no resolution timestamp, so this dashboard does not
-              estimate how long requests take to close. Status is the current status only.
+              Dates are when a request was <em>created</em>, in Seattle time. The main dataset has no resolution timestamp, so its status is
+              the current status only. Response times come from a separate City tracking dataset that covers just five request types.
             </li>
             <li>
               A request is one report, not one problem: several residents can report the same issue, and statuses such as &ldquo;Duplicate&rdquo;
