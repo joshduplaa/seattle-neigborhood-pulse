@@ -78,7 +78,7 @@ Numbers were also cross-checked against independent Socrata queries:
 
 - **Analytics:** a map with neighborhood shading by count or per-capita rate, density, and clustered requests; trends; type, status and area breakdowns that double as filters; period-over-period change; response times for five types.
 - **Reproducible setup:** `npm ci && npm run dev`, with no keys required.
-- **Tests:** 100 automated tests, including real API responses captured as fixtures.
+- **Tests:** more than 100 automated tests, including real API responses captured as fixtures.
 - **Quality gates:** CI runs typecheck, lint, tests and a production build on every PR; branch protection blocks merging unless it passes.
 - **Accessibility:** axe-core WCAG 2.1 AA, 0 violations, at desktop and mobile widths.
 

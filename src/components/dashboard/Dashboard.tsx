@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { AreaPanel, CategoryPanel, StatusPanel } from "@/components/dashboard/BreakdownPanels";
 import { DataProvenance, FreshnessLine } from "@/components/dashboard/DataProvenance";
+import { EquityPanel } from "@/components/dashboard/EquityPanel";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { RecentRequests } from "@/components/dashboard/RecentRequests";
 import { ResolutionPanel } from "@/components/dashboard/ResolutionPanel";
@@ -132,6 +133,8 @@ export function Dashboard() {
       )}
 
       {data ? <ResolutionPanel filters={filters} /> : null}
+
+      {data ? <EquityPanel filters={filters} onSelectArea={(area) => setFilters({ area })} /> : null}
 
       <DataProvenance data={data} />
 

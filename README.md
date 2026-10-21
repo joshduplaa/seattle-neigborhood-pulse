@@ -20,6 +20,7 @@ This is an exercise in agentic development using Claude Code.
 - **Summary metrics:** total requests, daily average, most reported type, and the share with usable coordinates.
 - **Period-over-period change:** the total and every neighborhood/district bar show the change versus the equally long period just before, with the same filters (e.g. "▼ −2.0% vs Aug 21 – Sep 19"). When the previous count is under 20, the absolute change is shown instead of a volatile percentage. Changes use neutral arrows, not red/green, because more reports isn't necessarily worse.
 - **Trends:** requests per day, week (Mon–Sun) or month, chosen from the range length. Days with no requests are zero-filled, and buckets cut short by the range are drawn dashed and labelled.
+- **Is the City responding equally?:** compares how quickly tracked requests get a "Closed" update across census tracts grouped by the City's Racial and Social Equity Index. Each group is adjusted for its mix of request types and shown with a 95% margin of error. It also breaks results down by request type and lists the neighborhoods furthest from expected.
 - **Response times:** for the five request types the City tracks (abandoned vehicles, graffiti, illegal dumping, public litter cans, streetlights), the share that got a "Closed" status update within 7 and 30 days and the median days. Measured on a cohort old enough to judge, so recent requests can't skew it.
 - **Breakdowns:** request types, current status, and an area comparison by neighborhood or council district. Neighborhoods can be compared by raw count or **per 1,000 residents** (2020 Census). Areas with fewer than 5,000 residents are listed separately rather than ranked, because their rates aren't comparable. Each bar is a keyboard-accessible button that toggles that filter.
 
@@ -80,6 +81,21 @@ How it's measured:
 - **Type mapping verified:** names differ between the two datasets (e.g. "Graffiti Report" vs "Graffiti"). Looking up 1,000 shared request numbers found 997 in both, each type mapping one-to-one ([`TRACKED_TYPES`](src/lib/socrata/config.ts)).
 - **Cross-checked** against a hand computation for the August 2026 cohort, e.g. abandoned vehicles: 5,869 requests, 44.1% closed within 7 days, 85.1% within 30, median 9 days.
 
+### Equity of response
+
+| | |
+| --- | --- |
+| Equity data | [Racial and Social Equity Composite Index Current](https://data.seattle.gov/d/x5s4-2aie), City of Seattle (2026 index) |
+| Geography | Seattle's 179 census tracts (2020), each with `COMPOSITE_QUINTILE` from Highest Equity Priority (most disadvantaged) to Lowest; 34–38 tracts per quintile |
+| Stored as | [`src/data/equity-tracts.json`](src/data/equity-tracts.json), regenerated with `node scripts/fetch-equity-tracts.mjs` (server-side only) |
+
+How the equity analysis is calculated:
+- **Cohort:** the same mature cohort as response times, lengthened to at least 90 days and capped at 366 so each group has enough requests.
+- **Location:** a chained SoQL query bins requests into 0.0005° cells (about 55 m × 37 m) with closed-within-7/30-day counts. The server then places each cell's center in its census tract and Community Reporting Area. Compared with exact points, this moves 1.7% of requests to a different quintile, about the same as moving an exact point 11 m (1.8%), so it is within the uncertainty of the reported locations.
+- **Indirect standardization:** a group's observed share closed within 7 (or 30) days is compared with the share expected if each of its requests closed at the citywide rate for its type. The difference is shown in percentage points with a 95% margin from the within-type binomial variance; a difference counts as clear only when the interval excludes zero.
+- **Cross-checked:** for May 24 – Aug 21, 2026, an independent recomputation from exact request locations matched every quintile's difference within 0.3 points (e.g. lowest-priority tracts +6.3 vs the app's +6.0 ± 1.3).
+- **Caveats shown in the app:** it shows differences, not causes; "Closed" includes vehicles that moved or couldn't be found; results are citywide, so other filters don't apply.
+
 ### Neighborhood boundaries and population
 
 | | |
@@ -123,6 +139,7 @@ src/
   lib/
     socrata/config.ts           dataset IDs, URLs, field names, limits
     population.ts               2020 population, per-1,000 rates, quantile classes
+    equity.ts, geo.ts           equity-of-response analysis; point-in-polygon lookup
     socrata/soql.ts             SoQL query builders (escaping, half-open date range)
     socrata/client.ts           fetch with timeout, retries, typed SocrataError
     socrata/normalize.ts        zod validation and normalization of raw rows
@@ -161,7 +178,7 @@ src/
 ## Verification
 
 - **CI:** [GitHub Actions](.github/workflows/ci.yml) runs `npm ci`, `npm run check` and `npm run build` on Node 24 for every pull request and every push to `main`.
-- `npm run typecheck`, `npm run lint`, `npm test` (100 tests) and `npm run build` all pass.
+- `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` all pass (CI runs them on every pull request).
 - Tests cover date maths (DST, leap years, Seattle "today"), filter parsing and clamping, SoQL building and escaping, normalization against **real captured API responses** (`src/lib/__fixtures__/`), malformed input, time-series bucketing and partial buckets, cache behaviour, HTTP client retry and error classification, the API route's error mapping and gzip, and key components.
 - Headless Chrome was used to check the main flows (select from list, filter via bars, area fit, presets), the empty and error states, layout at 390 px, 820 px, 1280 px and 1440 px (no horizontal overflow), and axe-core WCAG 2.1 AA (0 violations).
 

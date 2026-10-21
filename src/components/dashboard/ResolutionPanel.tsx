@@ -89,7 +89,8 @@ export function ResolutionPanel({ filters }: { filters: DashboardFilters }) {
 
           {/* Focusable so keyboard users can scroll the table on narrow screens. */}
           <div
-            className="-mx-4 overflow-x-auto sm:-mx-5"
+            // relative: keeps screen-reader-only text inside the scroller.
+            className="relative -mx-4 overflow-x-auto sm:-mx-5"
             tabIndex={0}
             role="region"
             aria-label="Response times table (scrolls horizontally)"

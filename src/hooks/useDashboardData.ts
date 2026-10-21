@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { filtersKey, type DashboardFilters } from "@/lib/filters";
+import type { EquityData } from "@/lib/equity";
 import type { ResolutionData } from "@/lib/resolution";
 import type { ApiErrorBody, DashboardResponse } from "@/lib/types";
 
@@ -83,6 +84,11 @@ export type DashboardState = ApiState<DashboardResponse>;
 
 export function useDashboardData(filters: DashboardFilters): DashboardState {
   return useApi<DashboardResponse>("/api/dashboard", filtersKey(filters));
+}
+
+/** Equity-of-response analysis; like response times, only the date range applies. */
+export function useEquityData(filters: Pick<DashboardFilters, "start" | "end">): ApiState<EquityData> {
+  return useApi<EquityData>("/api/equity", new URLSearchParams({ start: filters.start, end: filters.end }).toString());
 }
 
 /** Resolution stats depend only on the date range. */
