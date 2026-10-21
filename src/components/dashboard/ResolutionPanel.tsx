@@ -87,7 +87,13 @@ export function ResolutionPanel({ filters }: { filters: DashboardFilters }) {
 
           <p className={`mb-3 text-xs leading-5 ${data.window?.shifted ? "text-ink-muted" : "text-ink-subtle"}`}>{windowText(data.window)}</p>
 
-          <div className="-mx-4 overflow-x-auto sm:-mx-5">
+          {/* Focusable so keyboard users can scroll the table on narrow screens. */}
+          <div
+            className="-mx-4 overflow-x-auto sm:-mx-5"
+            tabIndex={0}
+            role="region"
+            aria-label="Response times table (scrolls horizontally)"
+          >
             <table className="w-full min-w-[560px] border-collapse text-[13px]">
               <caption className="sr-only">
                 Share of requests whose first Closed status update came within 7 and 30 days, and median days, by request type
