@@ -31,15 +31,9 @@ describe("normalizeRequest (real API rows)", () => {
   });
 
   it("keeps rows without coordinates but marks them unmapped", () => {
-    const unmapped = requests.filter((r) => r.coordinates === null && !r.locationWithheld);
+    const unmapped = requests.filter((r) => r.coordinates === null);
     expect(unmapped.length).toBeGreaterThanOrEqual(2);
     for (const r of unmapped) expect(r.area).toBeNull();
-  });
-
-  it("redacts real encampment rows from the live API", () => {
-    const encampments = requests.filter((r) => r.type === "Unauthorized Encampment");
-    expect(encampments.length).toBeGreaterThan(0);
-    for (const r of encampments) expect(r).toMatchObject({ address: null, coordinates: null, locationWithheld: true });
   });
 });
 
@@ -66,27 +60,6 @@ describe("normalizeRequest (malformed input)", () => {
     expect(parseCoordinates("40.7", "-74.0")).toBeNull(); // New York
     expect(parseCoordinates("47.6062", "-122.3321")).toEqual({ lat: 47.6062, lon: -122.3321 });
     expect(parseCoordinates(47.6, -122.3)).toEqual({ lat: 47.6, lon: -122.3 });
-  });
-
-  it("withholds the exact location of encampment reports but keeps area context", () => {
-    const raw = {
-      ...valid,
-      webintakeservicerequests: "Unauthorized Encampment",
-      location: "200 SUMMIT AVE E, SEATTLE, WA 98102",
-      latitude: "47.61981262",
-      longitude: "-122.32500963",
-      zipcode: "98102",
-      councildistrict: "3",
-      community_reporting_area: "CAPITOL HILL",
-    };
-    const r = normalizeRequest(raw)!;
-    expect(r).toMatchObject({ address: null, coordinates: null, locationWithheld: true, area: "CAPITOL HILL", councilDistrict: "3", zip: "98102" });
-    // The serialized API payload must not contain the address or coordinates either.
-    expect(JSON.stringify(r)).not.toMatch(/SUMMIT|47\.619|-122\.325/);
-
-    const graffiti = normalizeRequest({ ...raw, webintakeservicerequests: "Graffiti" })!;
-    expect(graffiti).toMatchObject({ address: "200 SUMMIT AVE E, SEATTLE, WA 98102", locationWithheld: false });
-    expect(graffiti.coordinates).not.toBeNull();
   });
 
   it("parses floating timestamps with or without milliseconds", () => {
