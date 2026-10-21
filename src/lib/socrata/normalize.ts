@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { LOCATION_WITHHELD_TYPES, SEATTLE_BOUNDS } from "@/lib/socrata/config";
+import { SEATTLE_BOUNDS } from "@/lib/socrata/config";
 import type { Coordinates, FacetBucket, GridCell, ServiceRequest } from "@/lib/types";
 
 /**
@@ -93,21 +93,15 @@ export function normalizeRequest(raw: unknown): ServiceRequest | null {
   const createdAt = parseFloatingTimestamp(r.createddate);
   if (id === null || createdAt === null) return null;
 
-  const type = text(r.webintakeservicerequests) ?? "Unspecified request type";
-  // Privacy: drop the exact location server-side for sensitive types; the
-  // neighborhood, district and ZIP remain.
-  const withheld = LOCATION_WITHHELD_TYPES.has(type);
-
   return {
     id,
-    type,
+    type: text(r.webintakeservicerequests) ?? "Unspecified request type",
     department: text(r.departmentname),
     createdAt,
     status: text(r.servicerequeststatusname),
     method: text(r.methodreceivedname),
-    address: withheld ? null : text(r.location),
-    coordinates: withheld ? null : parseCoordinates(r.latitude, r.longitude),
-    locationWithheld: withheld,
+    address: text(r.location),
+    coordinates: parseCoordinates(r.latitude, r.longitude),
     zip: text(r.zipcode),
     councilDistrict: text(r.councildistrict),
     precinct: text(r.policeprecinct),

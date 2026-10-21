@@ -19,7 +19,6 @@ const request = (id: string, overrides: Partial<ServiceRequest> = {}): ServiceRe
   method: null,
   address: "100 PINE ST",
   coordinates: { lat: 47.61, lon: -122.34 },
-  locationWithheld: false,
   zip: null,
   councilDistrict: "7",
   precinct: null,
@@ -152,22 +151,6 @@ describe("RecentRequests", () => {
     expect(screen.getAllByText("No map location")).toHaveLength(1);
     await userEvent.click(screen.getByRole("button", { name: /Pothole/ }));
     expect(onChoose).toHaveBeenCalledWith("26-2");
-  });
-
-  it("marks withheld locations distinctly from missing ones", () => {
-    const data = dashboard({
-      sample: {
-        limit: 2000,
-        requests: [
-          request("26-3", { type: "Unauthorized Encampment", coordinates: null, address: null, locationWithheld: true }),
-          request("26-4", { coordinates: null }),
-        ],
-        rejected: 0,
-      },
-    });
-    render(<RecentRequests data={data} loading={false} selectedId={null} onChoose={() => {}} onClearFilters={() => {}} canClear={false} />);
-    expect(screen.getAllByText("Location withheld")).toHaveLength(1);
-    expect(screen.getAllByText("No map location")).toHaveLength(1);
   });
 
   it("offers to clear filters when nothing matches", async () => {

@@ -101,10 +101,6 @@ export function DataProvenance({ data }: { data: DashboardData | null }) {
               boundaries and are never mixed. Area counts are not adjusted for population.
             </li>
             <li>Requests without valid Seattle coordinates are counted but not mapped; no location is ever guessed.</li>
-            <li>
-              For privacy, encampment reports never show an address or exact point. They still count in every total, chart, neighborhood
-              shade and the density layer (~550 m cells).
-            </li>
           </ul>
         </div>
       </div>

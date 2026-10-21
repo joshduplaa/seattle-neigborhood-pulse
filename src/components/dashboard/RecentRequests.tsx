@@ -81,17 +81,13 @@ export function RecentRequests({ data, loading, selectedId, onChoose, onClearFil
                       <span className="block text-xs leading-5 text-ink-subtle">
                         {formatLocalTimestamp(r.createdAt)}
                         {" · "}
-                        {r.area ? formatAreaName(r.area) : r.address ?? (r.locationWithheld ? "Location withheld" : "Location not recorded")}
+                        {r.area ? formatAreaName(r.area) : r.address ?? "Location not recorded"}
                       </span>
                       <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                         {r.status ? (
                           <span className="rounded border border-line px-1.5 text-[11px] leading-4 text-ink-muted">{r.status}</span>
                         ) : null}
-                        {r.locationWithheld ? (
-                          <span className="rounded border border-dashed border-line-strong px-1.5 text-[11px] leading-4 text-ink-subtle">
-                            Location withheld
-                          </span>
-                        ) : !r.coordinates ? (
+                        {!r.coordinates ? (
                           <span className="rounded border border-dashed border-line-strong px-1.5 text-[11px] leading-4 text-ink-subtle">
                             No map location
                           </span>
