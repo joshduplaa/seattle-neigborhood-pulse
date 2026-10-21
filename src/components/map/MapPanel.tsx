@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { buildShading, EXCLUDED_COLOR, legendClasses } from "@/components/map/choropleth";
 import type { MapBackground, MapFocus } from "@/components/map/MapView";
 import { Panel } from "@/components/ui/Panel";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { formatCount, formatPercent } from "@/lib/format";
 import { LOW_POPULATION_THRESHOLD, type AreaMeasure } from "@/lib/population";
 import type { DashboardData } from "@/lib/types";
@@ -49,6 +50,11 @@ const BACKGROUNDS: { id: MapBackground; label: string }[] = [
 export function MapPanel({ data, loading, error, selectedId, focus, measure, onSelect, onSelectArea }: MapPanelProps) {
   const [background, setBackground] = useState<MapBackground>("areas");
   const [showRequests, setShowRequests] = useState(true);
+  // Layers start collapsed on phones (where they'd cover most of the map) and
+  // open on larger screens; a tap overrides the default for this visit.
+  const wide = useMediaQuery("(min-width: 640px)", true);
+  const [layersChoice, setLayersChoice] = useState<boolean | null>(null);
+  const layersOpen = layersChoice ?? wide;
   const [mapState, setMapState] = useState<{ status: "loading" | "ready" | "error"; message?: string }>({
     status: "loading",
   });
@@ -112,97 +118,122 @@ export function MapPanel({ data, loading, error, selectedId, focus, measure, onS
           </div>
         ) : null}
 
-        {/* Legend + layer controls */}
-        <div className="absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-lg border border-line bg-surface/95 px-3 py-2.5 text-xs text-ink-muted shadow-sm backdrop-blur-sm sm:max-w-xs">
-          <fieldset>
-            <legend className="mb-1 font-medium text-ink">Background</legend>
-            <div className="inline-flex rounded-md border border-line-strong p-0.5">
-              {BACKGROUNDS.map((b) => (
-                <label
-                  key={b.id}
-                  className={`cursor-pointer rounded px-2 py-0.5 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-sound-strong ${
-                    background === b.id ? "bg-sound-strong font-medium text-white" : "hover:bg-sound-soft"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="map-background"
-                    value={b.id}
-                    checked={background === b.id}
-                    onChange={() => setBackground(b.id)}
-                    className="sr-only"
-                  />
-                  {b.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+        {/* Legend + layer controls: collapsible so it doesn't cover the map on phones. */}
+        <div className="absolute bottom-3 left-3 z-10 max-h-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] overflow-y-auto rounded-lg border border-line bg-surface/95 text-xs text-ink-muted shadow-sm backdrop-blur-sm sm:max-w-xs">
+          <button
+            type="button"
+            aria-expanded={layersOpen}
+            aria-controls="map-layers-panel"
+            onClick={() => setLayersChoice(!layersOpen)}
+            className="flex min-h-9 w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left hover:bg-surface-muted"
+          >
+            <span className="font-medium text-ink">
+              Map layers
+              {layersOpen ? null : (
+                <span className="font-normal text-ink-subtle"> · {BACKGROUNDS.find((b) => b.id === background)?.label}</span>
+              )}
+            </span>
+            <svg aria-hidden viewBox="0 0 16 16" className={`size-3.5 shrink-0 transition-transform ${layersOpen ? "" : "rotate-180"}`}>
+              <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="sr-only">{layersOpen ? "Hide" : "Show"} map layers and legend</span>
+          </button>
 
-          {background === "areas" ? (
-            <div className="mt-2">
-              <p>
-                {measure === "rate" ? "Requests per 1,000 residents" : "Requests"} by neighborhood
-                {measure === "rate" ? " (2020 Census population)" : ""}
-              </p>
-              <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 tabular-nums" aria-label="Neighborhood shading classes">
-                {legendClasses(shading).map((c) => (
-                  <li key={c.label} className="flex items-center gap-1.5">
-                    <span aria-hidden className="size-2.5 rounded-sm" style={{ background: c.color }} />
-                    {c.label}
-                  </li>
+          {layersOpen ? (
+            <div id="map-layers-panel" className="border-t border-line px-3 pb-2.5 pt-2">
+            <fieldset>
+              <legend className="mb-1 font-medium text-ink">Background</legend>
+              <div className="inline-flex rounded-md border border-line-strong p-0.5">
+                {BACKGROUNDS.map((b) => (
+                  <label
+                    key={b.id}
+                    className={`cursor-pointer rounded px-2 py-0.5 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-sound-strong ${
+                      background === b.id ? "bg-sound-strong font-medium text-white" : "hover:bg-sound-soft"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="map-background"
+                      value={b.id}
+                      checked={background === b.id}
+                      onChange={() => setBackground(b.id)}
+                      className="sr-only"
+                    />
+                    {b.label}
+                  </label>
                 ))}
-                {measure === "rate" ? (
-                  <li className="col-span-2 flex items-center gap-1.5">
-                    <span aria-hidden className="size-2.5 rounded-sm" style={{ background: EXCLUDED_COLOR }} />
-                    Under {formatCount(LOW_POPULATION_THRESHOLD)} residents (not compared)
-                  </li>
-                ) : null}
-              </ul>
-              <p className="mt-1 text-[11px] text-ink-subtle">Hover for details; click to filter. Shading changes with “Compare areas”.</p>
-            </div>
-          ) : background === "density" ? (
-            <div className="mt-2">
-              <p>All {formatCount(geolocated)} mapped requests</p>
-              <span
-                aria-hidden
-                className="mt-1 block h-1.5 w-28 rounded-full"
-                style={{ background: "linear-gradient(90deg, #d6eef3, #5bb2c8, #1c8eab, #063f57)" }}
+              </div>
+            </fieldset>
+
+            {background === "areas" ? (
+              <div className="mt-2">
+                <p>
+                  {measure === "rate" ? "Requests per 1,000 residents" : "Requests"} by neighborhood
+                  {measure === "rate" ? " (2020 Census population)" : ""}
+                </p>
+                <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 tabular-nums" aria-label="Neighborhood shading classes">
+                  {legendClasses(shading).map((c) => (
+                    <li key={c.label} className="flex items-center gap-1.5">
+                      <span aria-hidden className="size-2.5 rounded-sm" style={{ background: c.color }} />
+                      {c.label}
+                    </li>
+                  ))}
+                  {measure === "rate" ? (
+                    <li className="col-span-2 flex items-center gap-1.5">
+                      <span aria-hidden className="size-2.5 rounded-sm" style={{ background: EXCLUDED_COLOR }} />
+                      Under {formatCount(LOW_POPULATION_THRESHOLD)} residents (not compared)
+                    </li>
+                  ) : null}
+                </ul>
+                <p className="mt-1 hidden text-[11px] text-ink-subtle sm:block">
+                  Hover for details; click to filter. Shading changes with “Compare areas”.
+                </p>
+              </div>
+            ) : background === "density" ? (
+              <div className="mt-2">
+                <p>All {formatCount(geolocated)} mapped requests</p>
+                <span
+                  aria-hidden
+                  className="mt-1 block h-1.5 w-28 rounded-full"
+                  style={{ background: "linear-gradient(90deg, #d6eef3, #5bb2c8, #1c8eab, #063f57)" }}
+                />
+                <span className="mt-0.5 flex w-28 justify-between text-[10px] text-ink-subtle" aria-hidden>
+                  <span>fewer</span>
+                  <span>more</span>
+                </span>
+              </div>
+            ) : null}
+
+            <label className="mt-2 flex cursor-pointer items-start gap-2 border-t border-line pt-2">
+              <input
+                type="checkbox"
+                className="mt-0.5 accent-sound-strong"
+                checked={showRequests}
+                onChange={(e) => setShowRequests(e.target.checked)}
               />
-              <span className="mt-0.5 flex w-28 justify-between text-[10px] text-ink-subtle" aria-hidden>
-                <span>fewer</span>
-                <span>more</span>
+              <span>
+                <span className="font-medium text-ink">Individual requests</span> — newest {formatCount(mapped)}
+                <span className="mt-1 flex items-center gap-3 text-[11px]">
+                  <span className="inline-flex items-center gap-1">
+                    <span aria-hidden className="size-2.5 rounded-full bg-sound ring-2 ring-surface" /> request
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span aria-hidden className="size-3 rounded-full border-2 border-sound-deep bg-surface" /> cluster
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span aria-hidden className="size-2.5 rounded-full bg-ferry ring-2 ring-surface" /> selected
+                  </span>
+                </span>
+                {withheld > 0 ? (
+                  <span className="mt-1 block text-[11px] text-ink-subtle">
+                    {formatCount(withheld)} encampment {withheld === 1 ? "report isn't" : "reports aren't"} shown as points (privacy)
+                    <span className="hidden sm:inline">, but still count in the shading and density</span>.
+                  </span>
+                ) : null}
               </span>
+            </label>
             </div>
           ) : null}
-
-          <label className="mt-2 flex cursor-pointer items-start gap-2 border-t border-line pt-2">
-            <input
-              type="checkbox"
-              className="mt-0.5 accent-sound-strong"
-              checked={showRequests}
-              onChange={(e) => setShowRequests(e.target.checked)}
-            />
-            <span>
-              <span className="font-medium text-ink">Individual requests</span> — newest {formatCount(mapped)}
-              <span className="mt-1 flex items-center gap-3 text-[11px]">
-                <span className="inline-flex items-center gap-1">
-                  <span aria-hidden className="size-2.5 rounded-full bg-sound ring-2 ring-surface" /> request
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span aria-hidden className="size-3 rounded-full border-2 border-sound-deep bg-surface" /> cluster
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span aria-hidden className="size-2.5 rounded-full bg-ferry ring-2 ring-surface" /> selected
-                </span>
-              </span>
-              {withheld > 0 ? (
-                <span className="mt-1 block text-[11px] text-ink-subtle">
-                  {formatCount(withheld)} encampment {withheld === 1 ? "report isn't" : "reports aren't"} shown as points, for privacy. They still
-                  count in the shading and density.
-                </span>
-              ) : null}
-            </span>
-          </label>
         </div>
       </div>
     </Panel>
