@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { filtersKey, type DashboardFilters } from "@/lib/filters";
+import type { ResolutionData } from "@/lib/resolution";
 import type { ApiErrorBody, DashboardResponse } from "@/lib/types";
 
-interface Loaded {
+interface Loaded<T> {
   key: string;
-  data: DashboardResponse;
+  data: T;
 }
 
 interface Failed {
@@ -15,14 +16,14 @@ interface Failed {
   message: string;
 }
 
-export interface DashboardState {
-  /** Latest successful response; may belong to a previous filter state while loading. */
-  data: DashboardResponse | null;
-  /** True while the data for the current filters is still being fetched. */
+export interface ApiState<T> {
+  /** Latest successful response; may belong to a previous key while loading. */
+  data: T | null;
+  /** True while the data for the current key is still being fetched. */
   loading: boolean;
-  /** Error for the current filters, if the last attempt failed. */
+  /** Error for the current key, if the last attempt failed. */
   error: string | null;
-  /** True when `data` was loaded for the current filters. */
+  /** True when `data` was loaded for the current key. */
   isCurrent: boolean;
   retry: () => void;
 }
@@ -31,10 +32,9 @@ function isErrorBody(value: unknown): value is ApiErrorBody {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
-/** Fetch `/api/dashboard` for the given filters, aborting superseded requests. */
-export function useDashboardData(filters: DashboardFilters): DashboardState {
-  const key = filtersKey(filters);
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
+/** GET `${path}?${key}`, keeping the last good data and aborting superseded requests. */
+export function useApi<T>(path: string, key: string): ApiState<T> {
+  const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
   const [failed, setFailed] = useState<Failed | null>(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -43,24 +43,24 @@ export function useDashboardData(filters: DashboardFilters): DashboardState {
 
     (async () => {
       try {
-        const res = await fetch(`/api/dashboard?${key}`, { signal: controller.signal });
+        const res = await fetch(`${path}?${key}`, { signal: controller.signal });
         const body: unknown = await res.json().catch(() => null);
         if (!res.ok) {
-          const message = isErrorBody(body) ? body.error.message : `The dashboard service returned HTTP ${res.status}.`;
+          const message = isErrorBody(body) ? body.error.message : `The service returned HTTP ${res.status}.`;
           setFailed({ key, message });
           return;
         }
-        setLoaded({ key, data: body as DashboardResponse });
+        setLoaded({ key, data: body as T });
         setFailed(null);
       } catch (err) {
         if (controller.signal.aborted) return;
-        console.warn("Dashboard request failed", err);
+        console.warn(`Request to ${path} failed`, err);
         setFailed({ key, message: "Could not reach the dashboard service. Check your connection and try again." });
       }
     })();
 
     return () => controller.abort();
-  }, [key, attempt]);
+  }, [path, key, attempt]);
 
   const retry = useCallback(() => {
     setFailed(null);
@@ -77,4 +77,15 @@ export function useDashboardData(filters: DashboardFilters): DashboardState {
     isCurrent,
     retry,
   };
+}
+
+export type DashboardState = ApiState<DashboardResponse>;
+
+export function useDashboardData(filters: DashboardFilters): DashboardState {
+  return useApi<DashboardResponse>("/api/dashboard", filtersKey(filters));
+}
+
+/** Resolution stats depend only on the date range. */
+export function useResolutionData(filters: Pick<DashboardFilters, "start" | "end">): ApiState<ResolutionData> {
+  return useApi<ResolutionData>("/api/resolution", new URLSearchParams({ start: filters.start, end: filters.end }).toString());
 }

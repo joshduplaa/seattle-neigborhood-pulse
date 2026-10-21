@@ -6,6 +6,7 @@ import { AreaPanel, CategoryPanel, StatusPanel } from "@/components/dashboard/Br
 import { DataProvenance, FreshnessLine } from "@/components/dashboard/DataProvenance";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { RecentRequests } from "@/components/dashboard/RecentRequests";
+import { ResolutionPanel } from "@/components/dashboard/ResolutionPanel";
 import { RequestDetail } from "@/components/dashboard/RequestDetail";
 import { SummaryMetrics } from "@/components/dashboard/SummaryMetrics";
 import { TrendPanel } from "@/components/dashboard/TrendPanel";
@@ -129,6 +130,8 @@ export function Dashboard() {
         </div>
         </>
       )}
+
+      {data ? <ResolutionPanel filters={filters} /> : null}
 
       <DataProvenance data={data} />
 

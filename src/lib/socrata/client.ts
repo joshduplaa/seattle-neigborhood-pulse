@@ -27,6 +27,8 @@ export interface QueryOptions {
   retries?: number;
   fetchImpl?: typeof fetch;
   appToken?: string | undefined;
+  /** SODA resource endpoint; defaults to the Customer Service Requests dataset. */
+  resourceUrl?: string;
   /** Delay before retry `n` (1-based), in ms. */
   backoffMs?: (attempt: number) => number;
 }
@@ -40,7 +42,7 @@ function classifyStatus(status: number): SocrataErrorKind {
 }
 
 async function attempt(params: SoqlParams, opts: Required<Omit<QueryOptions, "appToken">> & { appToken?: string }): Promise<SoqlResult> {
-  const url = `${RESOURCE_URL}?${new URLSearchParams(params).toString()}`;
+  const url = `${opts.resourceUrl}?${new URLSearchParams(params).toString()}`;
   const headers: Record<string, string> = { Accept: "application/json" };
   // App tokens are optional; they raise Socrata's throttling limits.
   if (opts.appToken) headers["X-App-Token"] = opts.appToken;
@@ -90,6 +92,7 @@ export async function querySocrata(params: SoqlParams, options: QueryOptions = {
     fetchImpl: options.fetchImpl ?? fetch,
     appToken: options.appToken ?? process.env.SOCRATA_APP_TOKEN,
     backoffMs: options.backoffMs ?? ((n: number) => 400 * 2 ** (n - 1)),
+    resourceUrl: options.resourceUrl ?? RESOURCE_URL,
   };
 
   for (let n = 0; ; n++) {
