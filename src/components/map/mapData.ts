@@ -1,3 +1,5 @@
+import { classColor, type AreaShade } from "@/components/map/choropleth";
+import boundaries from "@/data/cra-boundaries.json";
 import type { GridCell, ServiceRequest } from "@/lib/types";
 
 /** Initial view: the city limits, from Rainier Beach to the north city line. */
@@ -58,5 +60,57 @@ export function cellBounds(cells: GridCell[], resolution: number): [[number, num
   return [
     [minLon - pad, minLat - pad],
     [maxLon + pad, maxLat + pad],
+  ];
+}
+
+type AreaGeometry = GeoJSON.Polygon | GeoJSON.MultiPolygon;
+const AREA_FEATURES = boundaries.features as unknown as GeoJSON.Feature<AreaGeometry, { area: string }>[];
+
+/**
+ * Community Reporting Area polygons with their shading resolved to a fill
+ * color, so the map layer needs no data-driven class logic.
+ */
+export function areasToGeoJSON(shades: AreaShade[], classCount: number): GeoJSON.FeatureCollection<AreaGeometry> {
+  const byArea = new Map(shades.map((s) => [s.area, s]));
+  return {
+    type: "FeatureCollection",
+    features: AREA_FEATURES.map((f) => {
+      const s = byArea.get(f.properties.area);
+      return {
+        type: "Feature",
+        geometry: f.geometry,
+        properties: {
+          area: f.properties.area,
+          name: s?.name ?? f.properties.area,
+          count: s?.count ?? 0,
+          rate: s?.rate ?? 0,
+          population: s?.population ?? 0,
+          lowPopulation: s?.lowPopulation ?? false,
+          fill: classColor(s?.cls ?? -1, classCount),
+        },
+      };
+    }),
+  };
+}
+
+function visit(coords: unknown, fn: (lon: number, lat: number) => void) {
+  if (Array.isArray(coords) && typeof coords[0] === "number") fn(coords[0] as number, coords[1] as number);
+  else if (Array.isArray(coords)) for (const c of coords) visit(c, fn);
+}
+
+/** Bounding box of one Community Reporting Area polygon; null if unknown. */
+export function areaBounds(area: string): [[number, number], [number, number]] | null {
+  const feature = AREA_FEATURES.find((f) => f.properties.area === area);
+  if (!feature) return null;
+  let [minLon, minLat, maxLon, maxLat] = [Infinity, Infinity, -Infinity, -Infinity];
+  visit(feature.geometry.coordinates, (lon, lat) => {
+    minLon = Math.min(minLon, lon);
+    maxLon = Math.max(maxLon, lon);
+    minLat = Math.min(minLat, lat);
+    maxLat = Math.max(maxLat, lat);
+  });
+  return [
+    [minLon, minLat],
+    [maxLon, maxLat],
   ];
 }

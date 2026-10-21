@@ -14,6 +14,7 @@ import type { MapFocus } from "@/components/map/MapView";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useFilterState } from "@/hooks/useFilterState";
 import { activeFacetCount } from "@/lib/filters";
+import type { AreaMeasure } from "@/lib/population";
 
 export function Dashboard() {
   const { filters, issues, setFilters, clearFilters, isDefault, today } = useFilterState();
@@ -21,6 +22,8 @@ export function Dashboard() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focus, setFocus] = useState<MapFocus | null>(null);
+  // Shared by the map shading and the area comparison.
+  const [measure, setMeasure] = useState<AreaMeasure>("count");
   const detailRef = useRef<HTMLElement>(null);
 
   // A selection that isn't in the current results simply shows as nothing selected.
@@ -96,7 +99,9 @@ export function Dashboard() {
             error={error}
             selectedId={activeId}
             focus={focus}
+            measure={measure}
             onSelect={setSelectedId}
+            onSelectArea={(area) => setFilters({ area: filters.area === area ? null : area })}
           />
           <div className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:max-h-[calc(600px+68px)]">
             <RequestDetail ref={detailRef} request={selected} onClose={() => setSelectedId(null)} />
@@ -120,7 +125,7 @@ export function Dashboard() {
 
         <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2">
           <CategoryPanel data={data} loading={loading} onChange={setFilters} />
-          <AreaPanel data={data} loading={loading} onChange={setFilters} />
+          <AreaPanel data={data} loading={loading} onChange={setFilters} measure={measure} onMeasureChange={setMeasure} />
         </div>
         </>
       )}
