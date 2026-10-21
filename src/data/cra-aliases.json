@@ -1,0 +1,430 @@
+{
+  "meta": {
+    "source": "City of Seattle, Community Reporting Areas (2020) - Redistricting Data 1990-2020",
+    "sourceUrl": "https://data.seattle.gov/d/7mx9-c62n",
+    "populationField": "F2020_PL_data_TOT_POP (2020 Census P.L. 94-171 total population)",
+    "retrieved": "2026-10-21",
+    "aliasField": "DETL_NAMES (all names for the area)"
+  },
+  "areas": {
+    "ALKI/ADMIRAL": {
+      "name": "Alki/Admiral",
+      "aliases": [
+        "Alki",
+        "Admiral"
+      ]
+    },
+    "ARBOR HEIGHTS": {
+      "name": "Arbor Heights",
+      "aliases": [
+        "Brace Point",
+        "Endolyne",
+        "Arroyo"
+      ]
+    },
+    "BALLARD": {
+      "name": "Ballard",
+      "aliases": [
+        "West Woodland",
+        "Adams"
+      ]
+    },
+    "BEACON HILL": {
+      "name": "Beacon Hill",
+      "aliases": []
+    },
+    "BELLTOWN": {
+      "name": "Belltown",
+      "aliases": [
+        "Denny Regrade"
+      ]
+    },
+    "BROADVIEW/BITTER LAKE": {
+      "name": "Broadview/Bitter Lake",
+      "aliases": [
+        "Broadview",
+        "Bitter Lake"
+      ]
+    },
+    "CAPITOL HILL": {
+      "name": "Capitol Hill",
+      "aliases": [
+        "Pike/Pine",
+        "Broadway",
+        "First Hill"
+      ]
+    },
+    "CASCADE/EASTLAKE": {
+      "name": "Cascade/Eastlake",
+      "aliases": [
+        "South Lake Union",
+        "Eastlake",
+        "Cascade",
+        "Denny Triangle"
+      ]
+    },
+    "CEDAR PARK/MEADOWBROOK": {
+      "name": "Cedar Park/Meadowbrook",
+      "aliases": [
+        "Cedar Park",
+        "Lake City",
+        "Meadowbrook",
+        "Matthews Beach"
+      ]
+    },
+    "CENTRAL AREA/SQUIRE PARK": {
+      "name": "Central Area/Squire Park",
+      "aliases": [
+        "Central Area",
+        "Mann",
+        "Minor",
+        "Squire Park"
+      ]
+    },
+    "COLUMBIA CITY": {
+      "name": "Columbia City",
+      "aliases": [
+        "Brighton",
+        "Mt. Baker",
+        "Lakewood",
+        "Genesee",
+        "Hillman City"
+      ]
+    },
+    "DOWNTOWN COMMERCIAL CORE": {
+      "name": "Downtown Commercial Core",
+      "aliases": [
+        "West Edge",
+        "Central Business District",
+        "Pike Place Market",
+        "Pioneer Square"
+      ]
+    },
+    "DUWAMISH/SODO": {
+      "name": "Duwamish/SODO",
+      "aliases": [
+        "Duwamish",
+        "SODO",
+        "Pioneer Square"
+      ]
+    },
+    "FAUNTLEROY/SEAVIEW": {
+      "name": "Fauntleroy/Seaview",
+      "aliases": [
+        "Fauntleroy",
+        "Gatewood",
+        "Morgan Junction",
+        "Lincoln Park",
+        "Seaview",
+        "Fairmount Park"
+      ]
+    },
+    "FIRST HILL": {
+      "name": "First Hill",
+      "aliases": [
+        "Yesler Terrace",
+        "Squire Park"
+      ]
+    },
+    "FREMONT": {
+      "name": "Fremont",
+      "aliases": [
+        "Wallingford",
+        "Northlake"
+      ]
+    },
+    "GEORGETOWN": {
+      "name": "Georgetown",
+      "aliases": []
+    },
+    "GREEN LAKE": {
+      "name": "Green Lake",
+      "aliases": [
+        "Meridian",
+        "Roosevelt",
+        "Woodland Park"
+      ]
+    },
+    "GREENWOOD/PHINNEY RIDGE": {
+      "name": "Greenwood/Phinney Ridge",
+      "aliases": [
+        "Greenwood",
+        "Phinney Ridge",
+        "Woodland Park",
+        "Crown Hill"
+      ]
+    },
+    "HALLER LAKE": {
+      "name": "Haller Lake",
+      "aliases": [
+        "Pinehurst"
+      ]
+    },
+    "HIGH POINT": {
+      "name": "High Point",
+      "aliases": [
+        "Delridge"
+      ]
+    },
+    "HIGHLAND PARK": {
+      "name": "Highland Park",
+      "aliases": [
+        "Westwood",
+        "White Center",
+        "South Delridge"
+      ]
+    },
+    "INTERBAY": {
+      "name": "Interbay",
+      "aliases": []
+    },
+    "JUDKINS PARK": {
+      "name": "Judkins Park",
+      "aliases": [
+        "Central Area",
+        "Little Saigon",
+        "Atlantic"
+      ]
+    },
+    "LAURELHURST/SAND POINT": {
+      "name": "Laurelhurst/Sand Point",
+      "aliases": [
+        "Laurelhurst",
+        "Windermere",
+        "Sand Point",
+        "Hawthorne Hills",
+        "Magnuson Park"
+      ]
+    },
+    "LICTON SPRINGS": {
+      "name": "Licton Springs",
+      "aliases": []
+    },
+    "MADISON PARK": {
+      "name": "Madison Park",
+      "aliases": [
+        "Broadmoor",
+        "Washington Park",
+        "Harrison/Denny-Blaine"
+      ]
+    },
+    "MADRONA/LESCHI": {
+      "name": "Madrona/Leschi",
+      "aliases": [
+        "Madrona",
+        "Leschi",
+        "Harrison/Denny-Blaine"
+      ]
+    },
+    "MAGNOLIA": {
+      "name": "Magnolia",
+      "aliases": [
+        "Discovery Park",
+        "Briarcliff",
+        "Lawton Park"
+      ]
+    },
+    "MILLER PARK": {
+      "name": "Miller Park",
+      "aliases": [
+        "Madison-Miller",
+        "Capitol Hill",
+        "Stevens"
+      ]
+    },
+    "MONTLAKE/PORTAGE BAY": {
+      "name": "Montlake/Portage Bay",
+      "aliases": [
+        "Montlake",
+        "Portage Bay",
+        "Interlaken Park",
+        "Eastlake",
+        "Roanoke Park",
+        "Washington Park"
+      ]
+    },
+    "MT. BAKER/NORTH RAINIER": {
+      "name": "Mt. Baker/North Rainier",
+      "aliases": [
+        "Mt. Baker",
+        "North Rainier",
+        "Atlantic"
+      ]
+    },
+    "NORTH BEACH/BLUE RIDGE": {
+      "name": "North Beach/Blue Ridge",
+      "aliases": [
+        "Crown Hill",
+        "North Beach",
+        "Blue Ridge"
+      ]
+    },
+    "NORTH BEACON HILL/JEFFERSON PARK": {
+      "name": "North Beacon Hill/Jefferson Park",
+      "aliases": [
+        "North Beacon Hill",
+        "Jefferson Park"
+      ]
+    },
+    "NORTH CAPITOL HILL": {
+      "name": "North Capitol Hill",
+      "aliases": [
+        "Capitol Hill",
+        "North Broadway"
+      ]
+    },
+    "NORTH DELRIDGE": {
+      "name": "North Delridge",
+      "aliases": [
+        "Pigeon Point",
+        "Avalon",
+        "Luna Park",
+        "Harbor Island"
+      ]
+    },
+    "NORTHGATE/MAPLE LEAF": {
+      "name": "Northgate/Maple Leaf",
+      "aliases": [
+        "Maple Leaf",
+        "Northgate",
+        "Pinehurst"
+      ]
+    },
+    "OLYMPIC HILLS/VICTORY HEIGHTS": {
+      "name": "Olympic Hills/Victory Heights",
+      "aliases": [
+        "Lake City",
+        "Victory Heights",
+        "Olympic Hills",
+        "Pinehurst",
+        "Jackson Park"
+      ]
+    },
+    "PIONEER SQUARE/INTERNATIONAL DISTRICT": {
+      "name": "Pioneer Square/International District",
+      "aliases": [
+        "Pioneer Square",
+        "International District",
+        "Chinatown",
+        "Little Saigon",
+        "ID",
+        "Chinatown-International District"
+      ]
+    },
+    "QUEEN ANNE": {
+      "name": "Queen Anne",
+      "aliases": [
+        "Lower Queen Anne",
+        "Uptown",
+        "Seattle Center",
+        "Westlake"
+      ]
+    },
+    "RAINIER BEACH": {
+      "name": "Rainier Beach",
+      "aliases": [
+        "Rainier View",
+        "Lake Ridge",
+        "Dunlap"
+      ]
+    },
+    "RAVENNA/BRYANT": {
+      "name": "Ravenna/Bryant",
+      "aliases": [
+        "Ravenna",
+        "Bryant",
+        "Roosevelt",
+        "View Ridge",
+        "Hawthorne Hills",
+        "Windermere",
+        "University District"
+      ]
+    },
+    "RIVERVIEW": {
+      "name": "Riverview",
+      "aliases": [
+        "Delridge"
+      ]
+    },
+    "ROXHILL/WESTWOOD": {
+      "name": "Roxhill/Westwood",
+      "aliases": [
+        "Roxhill",
+        "Westwood",
+        "South Delridge",
+        "White Center"
+      ]
+    },
+    "SEWARD PARK": {
+      "name": "Seward Park",
+      "aliases": [
+        "Hillman City"
+      ]
+    },
+    "SOUTH BEACON HILL/NEWHOLLY": {
+      "name": "South Beacon Hill/NewHolly",
+      "aliases": [
+        "South Beacon Hill",
+        "NewHolly",
+        "Holly Park"
+      ]
+    },
+    "SOUTH PARK": {
+      "name": "South Park",
+      "aliases": []
+    },
+    "SUNSET HILL/LOYAL HEIGHTS": {
+      "name": "Sunset Hill/Loyal Heights",
+      "aliases": [
+        "Sunset Hill",
+        "Golden Gardens",
+        "Loyal Heights",
+        "Shilshole"
+      ]
+    },
+    "UNIVERSITY DISTRICT": {
+      "name": "University District",
+      "aliases": [
+        "Cowen Park",
+        "Ravenna"
+      ]
+    },
+    "WALLINGFORD": {
+      "name": "Wallingford",
+      "aliases": [
+        "Meridian",
+        "Northlake",
+        "University District"
+      ]
+    },
+    "WEDGWOOD/VIEW RIDGE": {
+      "name": "Wedgwood/View Ridge",
+      "aliases": [
+        "Wedgwood",
+        "View Ridge",
+        "Bryant",
+        "Matthews Beach"
+      ]
+    },
+    "WEST SEATTLE JUNCTION/GENESEE HILL": {
+      "name": "West Seattle Junction/Genesee Hill",
+      "aliases": [
+        "Seaview",
+        "Fairmount Park",
+        "Morgan Junction",
+        "Genesee Hill",
+        "Belvidere",
+        "West Seattle Junction",
+        "Alaska Junction",
+        "Admiral"
+      ]
+    },
+    "WHITTIER HEIGHTS": {
+      "name": "Whittier Heights",
+      "aliases": [
+        "Loyal Heights",
+        "Crown Hill"
+      ]
+    }
+  }
+}

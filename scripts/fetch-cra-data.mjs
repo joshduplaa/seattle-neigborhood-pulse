@@ -17,7 +17,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const params = new URLSearchParams({
   where: "1=1",
-  outFields: "NEIGH_NAME,F2020_PL_data_TOT_POP,AREA_SQMI",
+  outFields: "NEIGH_NAME,DETL_NAMES,F2020_PL_data_TOT_POP,AREA_SQMI",
   returnGeometry: "true",
   outSR: "4326",
   // ~10 m simplification keeps the file small without visible distortion at city zoom.
@@ -42,6 +42,11 @@ const features = source.features.map((f) => {
     geometry: f.geometry,
     // `area` matches the upper-case community_reporting_area values in 5ngg-rpne.
     properties: { area: name.toUpperCase(), name, population, sqMi: Number(f.properties.AREA_SQMI) },
+    // Smaller places inside the area ("Lake City", "South Lake Union"), used by neighborhood search.
+    aliases: String(f.properties.DETL_NAMES ?? "")
+      .split(",")
+      .map((a) => a.trim())
+      .filter((a) => a && a.toLowerCase() !== name.toLowerCase()),
   };
 });
 
@@ -54,7 +59,15 @@ const meta = {
   retrieved: new Date().toISOString().slice(0, 10),
 };
 
-const boundaries = { type: "FeatureCollection", meta, features };
+const boundaries = {
+  type: "FeatureCollection",
+  meta,
+  features: features.map((f) => ({ type: f.type, geometry: f.geometry, properties: f.properties })),
+};
+const aliases = {
+  meta: { ...meta, aliasField: "DETL_NAMES (all names for the area)" },
+  areas: Object.fromEntries(features.map((f) => [f.properties.area, { name: f.properties.name, aliases: f.aliases }])),
+};
 const population = {
   meta,
   areas: Object.fromEntries(features.map((f) => [f.properties.area, f.properties.population])),
@@ -62,5 +75,6 @@ const population = {
 
 writeFileSync(join(root, "src/data/cra-boundaries.json"), JSON.stringify(boundaries) + "\n");
 writeFileSync(join(root, "src/data/cra-population.json"), JSON.stringify(population, null, 2) + "\n");
+writeFileSync(join(root, "src/data/cra-aliases.json"), JSON.stringify(aliases, null, 2) + "\n");
 const total = features.reduce((a, f) => a + f.properties.population, 0);
 console.log(`Wrote ${features.length} areas (2020 population ${total.toLocaleString("en-US")}).`);
