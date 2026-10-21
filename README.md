@@ -29,6 +29,8 @@ This is an exercise in agentic development using Claude Code.
 
 ![Selected request detail with the map focused on its location](docs/request-detail.png)
 
+For the story behind the build (data findings, scope decisions and the bugs verification caught), see the [case study](docs/case-study.md).
+
 ## Quick start
 
 Requires **Node.js 22.12+** and npm. Node 24 LTS is recommended and pinned in `.nvmrc` (`nvm use`).
@@ -159,7 +161,7 @@ src/
 ## Verification
 
 - **CI:** [GitHub Actions](.github/workflows/ci.yml) runs `npm ci`, `npm run check` and `npm run build` on Node 24 for every pull request and every push to `main`.
-- `npm run typecheck`, `npm run lint`, `npm test` (66 tests) and `npm run build` all pass.
+- `npm run typecheck`, `npm run lint`, `npm test` (98 tests) and `npm run build` all pass.
 - Tests cover date maths (DST, leap years, Seattle "today"), filter parsing and clamping, SoQL building and escaping, normalization against **real captured API responses** (`src/lib/__fixtures__/`), malformed input, time-series bucketing and partial buckets, cache behaviour, HTTP client retry and error classification, the API route's error mapping and gzip, and key components.
 - Headless Chrome was used to check the main flows (select from list, filter via bars, area fit, presets), the empty and error states, layout at 390 px, 820 px, 1280 px and 1440 px (no horizontal overflow), and axe-core WCAG 2.1 AA (0 violations).
 
