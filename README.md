@@ -23,8 +23,8 @@ This is an exercise in agentic development using Claude Code.
 Requires **Node.js 22.12+** (an LTS release, 22 or 24, is recommended) and npm.
 
 ```bash
-git clone https://github.com/joshduplaa/seattle-neigborhood-pulse.git
-cd seattle-neigborhood-pulse
+git clone https://github.com/joshduplaa/seattle-neighborhood-pulse.git
+cd seattle-neighborhood-pulse
 npm ci
 npm run dev        # http://localhost:3000
 ```
