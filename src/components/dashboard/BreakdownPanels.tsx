@@ -4,9 +4,10 @@ import { useState } from "react";
 
 import { RankedBars } from "@/components/charts/RankedBars";
 import { EmptyState, Panel, Skeleton } from "@/components/ui/Panel";
-import { rankBuckets } from "@/lib/aggregate";
+import { rankBuckets, type RankedBucket } from "@/lib/aggregate";
 import type { DashboardFilters } from "@/lib/filters";
-import { formatAreaName, formatCategory, formatCount, formatDistrict, formatStatus } from "@/lib/format";
+import { formatAreaName, formatCategory, formatCount, formatDecimal, formatDistrict, formatStatus } from "@/lib/format";
+import { areaRates, LOW_POPULATION_THRESHOLD, type AreaMeasure, type AreaRate } from "@/lib/population";
 import type { DashboardData } from "@/lib/types";
 
 interface BreakdownProps {
@@ -84,7 +85,55 @@ type AreaUnit = "area" | "district";
 
 const AREA_LIMIT = 12;
 
-export function AreaPanel({ data, loading, onChange }: BreakdownProps) {
+interface AreaPanelProps extends BreakdownProps {
+  /** Shared with the map shading. */
+  measure: AreaMeasure;
+  onMeasureChange: (measure: AreaMeasure) => void;
+}
+
+function Toggle<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex rounded-md border border-line-strong p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          aria-pressed={value === o.id}
+          onClick={() => onChange(o.id)}
+          className={`h-7 rounded px-2.5 text-[13px] transition-colors ${
+            value === o.id ? "bg-sound-strong font-medium text-white" : "text-ink-muted hover:bg-sound-soft hover:text-ink"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function rateItem(r: AreaRate): RankedBucket {
+  return {
+    key: r.area,
+    label: formatAreaName(r.area),
+    value: r.area,
+    count: r.count,
+    share: 0,
+    other: false,
+    display: { value: formatDecimal(r.rate), detail: `${formatCount(r.count)} req.`, bar: r.rate },
+  };
+}
+
+export function AreaPanel({ data, loading, onChange, measure, onMeasureChange }: AreaPanelProps) {
   const [unit, setUnit] = useState<AreaUnit>("area");
   const [expanded, setExpanded] = useState(false);
 
@@ -92,41 +141,53 @@ export function AreaPanel({ data, loading, onChange }: BreakdownProps) {
   const named = buckets.filter((b) => b.value !== null);
   const blank = buckets.find((b) => b.value === null)?.count ?? 0;
   const selected = data ? (unit === "area" ? data.filters.area : data.filters.district) : null;
-  const limit = unit === "district" || expanded ? named.length : AREA_LIMIT;
   const label = unit === "area" ? formatAreaName : formatDistrict;
+  // Population is published per Community Reporting Area only.
+  const perCapita = unit === "area" && measure === "rate";
 
-  const tabs: { id: AreaUnit; label: string }[] = [
-    { id: "area", label: "Neighborhoods" },
-    { id: "district", label: "Council districts" },
-  ];
+  const rates = perCapita && data ? areaRates(data.facets.area) : [];
+  const comparable = rates.filter((r) => !r.lowPopulation);
+  const lowPopulation = rates.filter((r) => r.lowPopulation);
+
+  const listLength = perCapita ? comparable.length : named.length;
+  const limit = unit === "district" || expanded ? listLength : AREA_LIMIT;
+
+  const description = perCapita
+    ? `Requests per 1,000 residents by Community Reporting Area, using 2020 Census population.`
+    : unit === "area"
+      ? "Requests by Community Reporting Area, the City's neighborhood-scale planning unit."
+      : "Requests by Seattle City Council district (1–7).";
 
   return (
     <Panel
       id="neighborhoods"
       title="Compare areas"
-      description={
-        unit === "area"
-          ? "Requests by Community Reporting Area, the City's neighborhood-scale planning unit."
-          : "Requests by Seattle City Council district (1–7)."
-      }
+      description={description}
       actions={
-        <div role="group" aria-label="Geographic unit" className="inline-flex rounded-md border border-line-strong p-0.5">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              aria-pressed={unit === t.id}
-              onClick={() => {
-                setUnit(t.id);
-                setExpanded(false);
-              }}
-              className={`h-7 rounded px-2.5 text-[13px] transition-colors ${
-                unit === t.id ? "bg-sound-strong font-medium text-white" : "text-ink-muted hover:bg-sound-soft hover:text-ink"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          <Toggle
+            label="Geographic unit"
+            value={unit}
+            onChange={(u) => {
+              setUnit(u);
+              setExpanded(false);
+            }}
+            options={[
+              { id: "area", label: "Neighborhoods" },
+              { id: "district", label: "Council districts" },
+            ]}
+          />
+          {unit === "area" ? (
+            <Toggle
+              label="Measure"
+              value={measure}
+              onChange={onMeasureChange}
+              options={[
+                { id: "count", label: "Requests" },
+                { id: "rate", label: "Per 1,000 residents" },
+              ]}
+            />
+          ) : null}
         </div>
       }
     >
@@ -136,26 +197,63 @@ export function AreaPanel({ data, loading, onChange }: BreakdownProps) {
         <EmptyState title="No requests with a recorded area match these filters" />
       ) : (
         <div className={`transition-opacity ${loading ? "opacity-60" : ""}`}>
-          <RankedBars
-            label={unit === "area" ? "Requests by neighborhood" : "Requests by council district"}
-            noun={unit === "area" ? "neighborhood" : "district"}
-            items={rankBuckets(named, { limit, selected, label })}
-            selected={selected}
-            onSelect={(value) => onChange(unit === "area" ? { area: value } : { district: value })}
-          />
-          {unit === "area" && named.length > AREA_LIMIT ? (
+          {perCapita ? (
+            <RankedBars
+              label="Requests per 1,000 residents by neighborhood"
+              noun="neighborhood"
+              items={comparable.slice(0, limit).map(rateItem)}
+              selected={selected}
+              onSelect={(value) => onChange({ area: value })}
+            />
+          ) : (
+            <RankedBars
+              label={unit === "area" ? "Requests by neighborhood" : "Requests by council district"}
+              noun={unit === "area" ? "neighborhood" : "district"}
+              items={rankBuckets(named, { limit, selected, label })}
+              selected={selected}
+              onSelect={(value) => onChange(unit === "area" ? { area: value } : { district: value })}
+            />
+          )}
+          {unit === "area" && listLength > AREA_LIMIT ? (
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
               className="mt-2 h-8 rounded-md px-2 text-[13px] font-medium text-sound-strong hover:bg-sound-soft"
             >
-              {expanded ? "Show top 12" : `Show all ${named.length} neighborhoods`}
+              {expanded ? "Show top 12" : `Show all ${listLength} neighborhoods`}
             </button>
           ) : null}
+
+          {perCapita && lowPopulation.length > 0 ? (
+            <div className="mt-3 rounded-md bg-surface-muted px-3 py-2">
+              <p className="text-xs font-medium text-ink">
+                Not ranked: fewer than {formatCount(LOW_POPULATION_THRESHOLD)} residents
+              </p>
+              <p className="text-xs leading-5 text-ink-subtle">
+                With few residents, a handful of requests swings the rate widely, and requests from workers and visitors weigh more, so these rates aren&apos;t comparable.
+              </p>
+              <ul className="mt-1 grid grid-cols-1 gap-x-4 text-xs leading-5 text-ink-muted sm:grid-cols-2">
+                {lowPopulation.map((r) => (
+                  <li key={r.area} className="flex justify-between gap-2 tabular-nums">
+                    <button type="button" onClick={() => onChange({ area: selected === r.area ? null : r.area })} className="text-left hover:underline">
+                      {formatAreaName(r.area)}
+                    </button>
+                    <span>
+                      {formatDecimal(r.rate)} · {formatCount(r.population)} residents
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           <p className="mt-3 border-t border-line pt-3 text-xs leading-5 text-ink-subtle">
-            Raw counts — not adjusted for population, area or foot traffic, so dense and commercial neighborhoods rank higher.
+            {perCapita
+              ? "Rates divide requests in the selected period by 2020 Census residents. Requests come from residents, workers and visitors alike, so busy commercial areas still rank higher."
+              : "Raw counts — not adjusted for population, area or foot traffic, so dense and commercial neighborhoods rank higher."}
             {blank > 0 ? ` ${formatCount(blank)} matching requests have no ${unit === "area" ? "area" : "district"} recorded and are excluded.` : ""}
+            {unit === "district" ? " Per-resident rates are available for neighborhoods only." : ""}
           </p>
         </div>
       )}

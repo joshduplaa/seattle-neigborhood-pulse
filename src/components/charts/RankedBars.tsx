@@ -21,7 +21,8 @@ interface RankedBarsProps {
  * whole scope.
  */
 export function RankedBars({ items, selected, onSelect, label, noun }: RankedBarsProps) {
-  const max = Math.max(1, ...items.map((i) => i.count));
+  const barOf = (i: RankedBucket) => i.display?.bar ?? i.count;
+  const max = Math.max(Number.EPSILON, ...items.map(barOf));
   const hasSelection = selected !== null;
 
   return (
@@ -30,7 +31,8 @@ export function RankedBars({ items, selected, onSelect, label, noun }: RankedBar
         const isSelected = !item.other && hasSelection && item.value === selected;
         const interactive = Boolean(onSelect) && !item.other && item.value !== null;
         const dim = hasSelection && !isSelected;
-        const width = `${Math.max((item.count / max) * 100, item.count > 0 ? 1.5 : 0)}%`;
+        const bar = barOf(item);
+        const width = `${Math.max((bar / max) * 100, bar > 0 ? 1.5 : 0)}%`;
 
         const content = (
           <>
@@ -39,8 +41,8 @@ export function RankedBars({ items, selected, onSelect, label, noun }: RankedBar
                 {item.label}
               </span>
               <span className="shrink-0 text-[13px] leading-5 tabular-nums text-ink-muted">
-                {formatCount(item.count)}
-                <span className="ml-1.5 inline-block w-12 text-right text-ink-subtle">{formatPercent(item.share)}</span>
+                {item.display?.value ?? formatCount(item.count)}
+                <span className="ml-1.5 inline-block min-w-12 text-right text-ink-subtle">{item.display?.detail ?? formatPercent(item.share)}</span>
               </span>
             </span>
             <span aria-hidden className="mt-1 block h-2 w-full rounded-full bg-surface-muted">

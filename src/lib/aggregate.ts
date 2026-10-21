@@ -81,6 +81,8 @@ export interface RankedBucket {
   share: number;
   /** True for the folded "all other" bucket. */
   other: boolean;
+  /** Overrides for non-count measures (e.g. a per-capita rate). */
+  display?: { value: string; detail: string; bar: number };
 }
 
 /**

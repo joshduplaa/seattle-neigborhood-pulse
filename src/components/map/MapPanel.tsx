@@ -1,11 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-import type { MapFocus } from "@/components/map/MapView";
+import { buildShading, EXCLUDED_COLOR, legendClasses } from "@/components/map/choropleth";
+import type { MapBackground, MapFocus } from "@/components/map/MapView";
 import { Panel } from "@/components/ui/Panel";
 import { formatCount, formatPercent } from "@/lib/format";
+import { LOW_POPULATION_THRESHOLD, type AreaMeasure } from "@/lib/population";
 import type { DashboardData } from "@/lib/types";
 
 // MapLibre touches `window` on import, so it only loads in the browser.
@@ -17,7 +19,10 @@ interface MapPanelProps {
   error: string | null;
   selectedId: string | null;
   focus: MapFocus | null;
+  /** Shared with the area comparison: shade by count or per 1,000 residents. */
+  measure: AreaMeasure;
   onSelect: (id: string) => void;
+  onSelectArea: (area: string) => void;
 }
 
 function Overlay({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "alert" }) {
@@ -35,8 +40,14 @@ function Overlay({ children, tone = "neutral" }: { children: React.ReactNode; to
   );
 }
 
-export function MapPanel({ data, loading, error, selectedId, focus, onSelect }: MapPanelProps) {
-  const [showDensity, setShowDensity] = useState(true);
+const BACKGROUNDS: { id: MapBackground; label: string }[] = [
+  { id: "areas", label: "Neighborhoods" },
+  { id: "density", label: "Density" },
+  { id: "none", label: "Off" },
+];
+
+export function MapPanel({ data, loading, error, selectedId, focus, measure, onSelect, onSelectArea }: MapPanelProps) {
+  const [background, setBackground] = useState<MapBackground>("areas");
   const [showRequests, setShowRequests] = useState(true);
   const [mapState, setMapState] = useState<{ status: "loading" | "ready" | "error"; message?: string }>({
     status: "loading",
@@ -48,6 +59,8 @@ export function MapPanel({ data, loading, error, selectedId, focus, onSelect }: 
   const matching = data?.totals.matching ?? 0;
   const geolocated = data?.totals.geolocated ?? 0;
   const fitKey = data ? `${data.filters.area ?? ""}|${data.filters.district ?? ""}` : "|";
+  const areaFacet = data?.facets.area;
+  const shading = useMemo(() => buildShading(areaFacet ?? [], measure), [areaFacet, measure]);
 
   const description = data ? (
     <>
@@ -68,9 +81,12 @@ export function MapPanel({ data, loading, error, selectedId, focus, onSelect }: 
           selectedId={selectedId}
           focus={focus}
           fitKey={fitKey}
-          showDensity={showDensity}
+          background={background}
+          shading={shading}
+          selectedArea={data?.filters.area ?? null}
           showRequests={showRequests}
           onSelect={onSelect}
+          onSelectArea={onSelectArea}
           onStatusChange={(status, message) => setMapState({ status, message })}
         />
 
@@ -95,18 +111,57 @@ export function MapPanel({ data, loading, error, selectedId, focus, onSelect }: 
           </div>
         ) : null}
 
-        {/* Legend + layer toggles */}
-        <fieldset className="absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-lg border border-line bg-surface/95 px-3 py-2.5 text-xs text-ink-muted shadow-sm backdrop-blur-sm sm:max-w-xs">
-          <legend className="sr-only">Map layers</legend>
-          <label className="flex cursor-pointer items-start gap-2">
-            <input
-              type="checkbox"
-              className="mt-0.5 accent-sound-strong"
-              checked={showDensity}
-              onChange={(e) => setShowDensity(e.target.checked)}
-            />
-            <span>
-              <span className="font-medium text-ink">Density</span> — all {formatCount(geolocated)} mapped requests
+        {/* Legend + layer controls */}
+        <div className="absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-lg border border-line bg-surface/95 px-3 py-2.5 text-xs text-ink-muted shadow-sm backdrop-blur-sm sm:max-w-xs">
+          <fieldset>
+            <legend className="mb-1 font-medium text-ink">Background</legend>
+            <div className="inline-flex rounded-md border border-line-strong p-0.5">
+              {BACKGROUNDS.map((b) => (
+                <label
+                  key={b.id}
+                  className={`cursor-pointer rounded px-2 py-0.5 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-sound-strong ${
+                    background === b.id ? "bg-sound-strong font-medium text-white" : "hover:bg-sound-soft"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="map-background"
+                    value={b.id}
+                    checked={background === b.id}
+                    onChange={() => setBackground(b.id)}
+                    className="sr-only"
+                  />
+                  {b.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          {background === "areas" ? (
+            <div className="mt-2">
+              <p>
+                {measure === "rate" ? "Requests per 1,000 residents" : "Requests"} by neighborhood
+                {measure === "rate" ? " (2020 Census population)" : ""}
+              </p>
+              <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 tabular-nums" aria-label="Neighborhood shading classes">
+                {legendClasses(shading).map((c) => (
+                  <li key={c.label} className="flex items-center gap-1.5">
+                    <span aria-hidden className="size-2.5 rounded-sm" style={{ background: c.color }} />
+                    {c.label}
+                  </li>
+                ))}
+                {measure === "rate" ? (
+                  <li className="col-span-2 flex items-center gap-1.5">
+                    <span aria-hidden className="size-2.5 rounded-sm" style={{ background: EXCLUDED_COLOR }} />
+                    Under {formatCount(LOW_POPULATION_THRESHOLD)} residents (not compared)
+                  </li>
+                ) : null}
+              </ul>
+              <p className="mt-1 text-[11px] text-ink-subtle">Hover for details; click to filter. Shading changes with “Compare areas”.</p>
+            </div>
+          ) : background === "density" ? (
+            <div className="mt-2">
+              <p>All {formatCount(geolocated)} mapped requests</p>
               <span
                 aria-hidden
                 className="mt-1 block h-1.5 w-28 rounded-full"
@@ -116,9 +171,10 @@ export function MapPanel({ data, loading, error, selectedId, focus, onSelect }: 
                 <span>fewer</span>
                 <span>more</span>
               </span>
-            </span>
-          </label>
-          <label className="mt-2 flex cursor-pointer items-start gap-2">
+            </div>
+          ) : null}
+
+          <label className="mt-2 flex cursor-pointer items-start gap-2 border-t border-line pt-2">
             <input
               type="checkbox"
               className="mt-0.5 accent-sound-strong"
@@ -140,7 +196,7 @@ export function MapPanel({ data, loading, error, selectedId, focus, onSelect }: 
               </span>
             </span>
           </label>
-        </fieldset>
+        </div>
       </div>
     </Panel>
   );

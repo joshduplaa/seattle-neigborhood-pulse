@@ -3,7 +3,10 @@
 import * as maplibregl from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
+import type { Shading } from "@/components/map/choropleth";
 import {
+  areaBounds,
+  areasToGeoJSON,
   BASEMAP_STYLE_URL,
   cellBounds,
   gridToGeoJSON,
@@ -11,6 +14,7 @@ import {
   SEATTLE_BOUNDS,
   SEATTLE_MAX_BOUNDS,
 } from "@/components/map/mapData";
+import { formatCount, formatDecimal } from "@/lib/format";
 import type { GridCell, ServiceRequest } from "@/lib/types";
 
 // Worker is copied to /public by scripts/copy-maplibre-worker.mjs; the
@@ -31,22 +35,33 @@ export interface MapViewProps {
   focus: MapFocus | null;
   /** Changes when the geographic filter changes; the map then fits the data. */
   fitKey: string;
-  showDensity: boolean;
+  background: MapBackground;
+  shading: Shading;
+  selectedArea: string | null;
   showRequests: boolean;
   onSelect: (id: string) => void;
+  /** Toggle the neighborhood filter for an area clicked on the map. */
+  onSelectArea: (area: string) => void;
   onStatusChange: (status: "ready" | "error", message?: string) => void;
 }
+
+export type MapBackground = "areas" | "density" | "none";
+
+const REQUEST_LAYERS = ["request-clusters", "request-cluster-count", "request-points", "request-selected"];
+const AREA_LAYERS = ["area-fill", "area-line", "area-selected"];
 
 const COLORS = {
   sound: "#00789a",
   soundDeep: "#063f57",
   ferry: "#d9622b",
   surface: "#ffffff",
+  ink: "#13222c",
 };
 
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 function addLayers(map: maplibregl.Map) {
+  map.addSource("areas", { type: "geojson", data: EMPTY, promoteId: "area" });
   map.addSource("density", { type: "geojson", data: EMPTY });
   // The selection has its own unclustered source so it is never hidden inside a cluster.
   map.addSource("selected", { type: "geojson", data: EMPTY });
@@ -57,6 +72,27 @@ function addLayers(map: maplibregl.Map) {
     clusterRadius: 44,
     clusterMaxZoom: 15,
     promoteId: "id",
+  });
+
+  // Neighborhood shading (fill color resolved in areasToGeoJSON).
+  map.addLayer({
+    id: "area-fill",
+    type: "fill",
+    source: "areas",
+    paint: { "fill-color": ["get", "fill"], "fill-opacity": 0.62 },
+  });
+  map.addLayer({
+    id: "area-line",
+    type: "line",
+    source: "areas",
+    paint: { "line-color": COLORS.surface, "line-width": 1 },
+  });
+  map.addLayer({
+    id: "area-selected",
+    type: "line",
+    source: "areas",
+    filter: ["==", ["get", "area"], ""],
+    paint: { "line-color": COLORS.ink, "line-width": 2.5 },
   });
 
   // Density: one-hue sequential ramp, transparent at zero.
@@ -145,6 +181,30 @@ function setVisibility(map: maplibregl.Map, layers: string[], visible: boolean) 
   }
 }
 
+/** Hover card for a neighborhood, built from DOM nodes (no HTML injection). */
+function areaCard(props: Record<string, unknown>): HTMLElement {
+  const root = document.createElement("div");
+  root.className = "text-[13px] leading-5 text-ink";
+  const line = (text: string, className = "") => {
+    const el = document.createElement("div");
+    el.textContent = text;
+    if (className) el.className = className;
+    root.append(el);
+  };
+  const population = Number(props.population ?? 0);
+  line(String(props.name ?? ""), "font-semibold");
+  line(`${formatCount(Number(props.count ?? 0))} requests`);
+  if (population > 0) {
+    line(`${formatDecimal(Number(props.rate ?? 0))} per 1,000 residents`);
+    line(`${formatCount(population)} residents (2020 Census)`, "text-ink-subtle");
+  }
+  if (props.lowPopulation === true || props.lowPopulation === "true") {
+    line("Few residents: per-capita rate not comparable", "text-ink-subtle");
+  }
+  line("Click to filter to this neighborhood", "mt-1 text-ink-subtle");
+  return root;
+}
+
 export default function MapView(props: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -215,6 +275,27 @@ export default function MapView(props: MapViewProps) {
       map.getCanvas().style.cursor = "";
     };
 
+    // Neighborhood hover card and click-to-filter. Clicks on markers win.
+    const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12, maxWidth: "240px" });
+    const onAreaMove = (e: maplibregl.MapLayerMouseEvent) => {
+      const props = e.features?.[0]?.properties;
+      if (!props) return;
+      map.getCanvas().style.cursor = "pointer";
+      popup.setLngLat(e.lngLat).setDOMContent(areaCard(props)).addTo(map);
+    };
+    const onAreaLeave = () => {
+      map.getCanvas().style.cursor = "";
+      popup.remove();
+    };
+    const onAreaClick = (e: maplibregl.MapLayerMouseEvent) => {
+      const onMarker = map.queryRenderedFeatures(e.point, { layers: REQUEST_LAYERS.filter((l) => map.getLayer(l)) }).length > 0;
+      const area = e.features?.[0]?.properties?.area;
+      if (!onMarker && typeof area === "string") propsRef.current.onSelectArea(area);
+    };
+    map.on("mousemove", "area-fill", onAreaMove);
+    map.on("mouseleave", "area-fill", onAreaLeave);
+    map.on("click", "area-fill", onAreaClick);
+
     map.on("click", "request-clusters", onClusterClick);
     map.on("click", "request-points", onPointClick);
     map.on("click", "request-selected", onPointClick);
@@ -224,13 +305,26 @@ export default function MapView(props: MapViewProps) {
     }
 
     return () => {
+      popup.remove();
       map.remove();
       mapRef.current = null;
       setReady(false);
     };
   }, []);
 
-  const { cells, requests, selectedId, focus, fitKey, resolution, showDensity, showRequests } = props;
+  const { cells, requests, selectedId, focus, fitKey, resolution, background, shading, selectedArea, showRequests } = props;
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map) return;
+    map.getSource<maplibregl.GeoJSONSource>("areas")?.setData(areasToGeoJSON(shading.shades, shading.breaks.length + 1));
+  }, [ready, shading]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map) return;
+    map.setFilter("area-selected", ["==", ["get", "area"], selectedArea ?? ""]);
+  }, [ready, selectedArea]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -254,9 +348,10 @@ export default function MapView(props: MapViewProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
-    setVisibility(map, ["density-heat"], showDensity);
-    setVisibility(map, ["request-clusters", "request-cluster-count", "request-points", "request-selected"], showRequests);
-  }, [ready, showDensity, showRequests]);
+    setVisibility(map, ["density-heat"], background === "density");
+    setVisibility(map, AREA_LAYERS, background === "areas");
+    setVisibility(map, REQUEST_LAYERS, showRequests);
+  }, [ready, background, showRequests]);
 
   // Fly to a request chosen from the list.
   useEffect(() => {
@@ -281,7 +376,9 @@ export default function MapView(props: MapViewProps) {
       if (!first) map.fitBounds(SEATTLE_BOUNDS, { padding: 24 });
       return;
     }
-    const bounds = cellBounds(cells, resolution);
+    // Prefer the neighborhood's real boundary; otherwise fit the matching data.
+    const area = fitKey.split("|")[0];
+    const bounds = (area ? areaBounds(area) : null) ?? cellBounds(cells, resolution);
     if (bounds) map.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: first ? 0 : 800 });
   }, [ready, fitKey, cells, resolution]);
 
