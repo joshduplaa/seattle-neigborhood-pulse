@@ -40,7 +40,7 @@ describe("getDashboardData", () => {
     const query = fixtureQuery();
     const data = await getDashboardData(filters, query, () => new Date("2026-10-20T22:00:00Z"));
 
-    expect(query.calls).toHaveLength(8);
+    expect(query.calls).toHaveLength(10);
     expect(data.retrievedAt).toBe("2026-10-20T22:00:00.000Z");
     expect(data.sourceUpdatedAt).toBe("2026-10-20T15:08:41.000Z");
     expect(data.newestRecordAt).toBe("2026-10-20T02:33:06");
@@ -55,6 +55,21 @@ describe("getDashboardData", () => {
 
     expect(data.sample.requests.length).toBe(fixtures.sample.length);
     expect(data.sample.rejected).toBe(0);
+
+    // Previous 7 days, same filters; total from the area facet (all buckets).
+    expect(data.comparison).toMatchObject({ start: "2026-10-05", end: "2026-10-11", matching: 6830 });
+    const prevWhere = query.calls.filter((c) => c.$where?.includes("2026-10-05T00:00:00"));
+    expect(prevWhere.map((c) => c.$group)).toEqual(["community_reporting_area", "councildistrict"]);
+  });
+
+  it("uses the selected area's previous count and skips comparison before the dataset starts", async () => {
+    const withArea = await getDashboardData({ ...filters, area: "BALLARD" }, fixtureQuery());
+    expect(withArea.comparison?.matching).toBe(6700);
+
+    const early = fixtureQuery();
+    const data = await getDashboardData({ ...filters, start: "2013-01-02", end: "2013-01-31" }, early);
+    expect(data.comparison).toBeNull();
+    expect(early.calls).toHaveLength(8);
   });
 
   it("derives the total from the selected category bucket", async () => {

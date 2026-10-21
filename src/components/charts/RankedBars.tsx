@@ -1,4 +1,5 @@
 import type { RankedBucket } from "@/lib/aggregate";
+import { CHANGE_ARROW } from "@/lib/change";
 import { formatCount, formatPercent } from "@/lib/format";
 
 interface RankedBarsProps {
@@ -41,6 +42,15 @@ export function RankedBars({ items, selected, onSelect, label, noun }: RankedBar
                 {item.label}
               </span>
               <span className="shrink-0 text-[13px] leading-5 tabular-nums text-ink-muted">
+                {item.change ? (
+                  <span className="mr-2 text-[11px] text-ink-subtle" title={item.change.description}>
+                    <span aria-hidden className="mr-0.5 text-[8px]">
+                      {CHANGE_ARROW[item.change.direction]}
+                    </span>
+                    <span className="sr-only">{item.change.description}, </span>
+                    <span aria-hidden>{item.change.text}</span>
+                  </span>
+                ) : null}
                 {item.display?.value ?? formatCount(item.count)}
                 <span className="ml-1.5 inline-block min-w-12 text-right text-ink-subtle">{item.display?.detail ?? formatPercent(item.share)}</span>
               </span>

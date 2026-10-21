@@ -79,6 +79,19 @@ export interface DashboardData {
     resolution: number;
     cells: GridCell[];
   };
+  /**
+   * The equally long period immediately before the selected range, with the
+   * same filters. Null when it would start before the dataset begins.
+   */
+  comparison: {
+    start: string;
+    end: string;
+    /** Requests matching every filter in the previous period. */
+    matching: number;
+    /** Previous-period counts per area and district (each ignoring its own filter). */
+    area: FacetBucket[];
+    district: FacetBucket[];
+  } | null;
   sample: {
     /** Maximum number of requests requested from the source. */
     limit: number;

@@ -1,5 +1,5 @@
 import { DATASET_START_DATE } from "@/lib/socrata/config";
-import { addDays, compareYmd, isValidYmd } from "@/lib/dates";
+import { addDays, compareYmd, daysInRange, isValidYmd } from "@/lib/dates";
 
 /**
  * Dashboard filter state. The same shape is used in the URL, by the API route
@@ -142,6 +142,18 @@ export function filtersToParams(filters: DashboardFilters): URLSearchParams {
     if (value !== null) params.set(key, value);
   }
   return params;
+}
+
+/**
+ * The equally long window immediately before the selected range, with the
+ * same facet filters. Null when it would start before the dataset does.
+ */
+export function previousPeriod(filters: DashboardFilters): DashboardFilters | null {
+  const days = daysInRange(filters.start, filters.end);
+  const end = addDays(filters.start, -1);
+  const start = addDays(end, -(days - 1));
+  if (compareYmd(start, DATASET_START_DATE) < 0) return null;
+  return { ...filters, start, end };
 }
 
 export function activeFacetCount(filters: DashboardFilters): number {

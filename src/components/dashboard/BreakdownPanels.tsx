@@ -8,7 +8,9 @@ import { rankBuckets, type RankedBucket } from "@/lib/aggregate";
 import type { DashboardFilters } from "@/lib/filters";
 import { formatAreaName, formatCategory, formatCount, formatDecimal, formatDistrict, formatStatus } from "@/lib/format";
 import { areaRates, LOW_POPULATION_THRESHOLD, type AreaMeasure, type AreaRate } from "@/lib/population";
-import type { DashboardData } from "@/lib/types";
+import { describeChange } from "@/lib/change";
+import { formatShortDate } from "@/lib/dates";
+import type { DashboardData, FacetBucket } from "@/lib/types";
 
 interface BreakdownProps {
   data: DashboardData | null;
@@ -121,6 +123,13 @@ function Toggle<T extends string>({
   );
 }
 
+/** Attach the change versus the previous period to each named bucket. */
+function withChange(items: RankedBucket[], previous: FacetBucket[] | null): RankedBucket[] {
+  if (!previous) return items;
+  const prev = new Map(previous.map((b) => [b.value, b.count]));
+  return items.map((i) => (i.other || i.value === null ? i : { ...i, change: describeChange(i.count, prev.get(i.value) ?? 0) }));
+}
+
 function rateItem(r: AreaRate): RankedBucket {
   return {
     key: r.area,
@@ -146,6 +155,7 @@ export function AreaPanel({ data, loading, onChange, measure, onMeasureChange }:
   const perCapita = unit === "area" && measure === "rate";
 
   const rates = perCapita && data ? areaRates(data.facets.area) : [];
+  const previous = data?.comparison ? data.comparison[unit] : null;
   const comparable = rates.filter((r) => !r.lowPopulation);
   const lowPopulation = rates.filter((r) => r.lowPopulation);
 
@@ -201,7 +211,7 @@ export function AreaPanel({ data, loading, onChange, measure, onMeasureChange }:
             <RankedBars
               label="Requests per 1,000 residents by neighborhood"
               noun="neighborhood"
-              items={comparable.slice(0, limit).map(rateItem)}
+              items={withChange(comparable.slice(0, limit).map(rateItem), previous)}
               selected={selected}
               onSelect={(value) => onChange({ area: value })}
             />
@@ -209,7 +219,7 @@ export function AreaPanel({ data, loading, onChange, measure, onMeasureChange }:
             <RankedBars
               label={unit === "area" ? "Requests by neighborhood" : "Requests by council district"}
               noun={unit === "area" ? "neighborhood" : "district"}
-              items={rankBuckets(named, { limit, selected, label })}
+              items={withChange(rankBuckets(named, { limit, selected, label }), previous)}
               selected={selected}
               onSelect={(value) => onChange(unit === "area" ? { area: value } : { district: value })}
             />
@@ -254,6 +264,9 @@ export function AreaPanel({ data, loading, onChange, measure, onMeasureChange }:
               : "Raw counts — not adjusted for population, area or foot traffic, so dense and commercial neighborhoods rank higher."}
             {blank > 0 ? ` ${formatCount(blank)} matching requests have no ${unit === "area" ? "area" : "district"} recorded and are excluded.` : ""}
             {unit === "district" ? " Per-resident rates are available for neighborhoods only." : ""}
+            {data.comparison
+              ? ` ▲▼ compare with ${formatShortDate(data.comparison.start)} – ${formatShortDate(data.comparison.end)}, the same number of days just before.`
+              : ""}
           </p>
         </div>
       )}
