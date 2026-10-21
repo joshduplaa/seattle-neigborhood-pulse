@@ -1,4 +1,5 @@
 import { addDays, compareYmd, daysInRange, endOfMonth, startOfMonth, startOfWeek } from "@/lib/dates";
+import type { Change } from "@/lib/change";
 import type { FacetBucket, Granularity, TimeSeriesPoint } from "@/lib/types";
 
 /** Day buckets up to ~2 months, weeks up to ~1 year, months beyond. */
@@ -83,6 +84,8 @@ export interface RankedBucket {
   other: boolean;
   /** Overrides for non-count measures (e.g. a per-capita rate). */
   display?: { value: string; detail: string; bar: number };
+  /** Change versus the previous period, shown beside the value. */
+  change?: Change | null;
 }
 
 /**

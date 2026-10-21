@@ -44,6 +44,7 @@ function dashboard(overrides: Partial<DashboardData> = {}): DashboardData {
     },
     series: { granularity: "day", points: [] },
     grid: { resolution: 0.005, cells: [] },
+    comparison: null,
     sample: { limit: 2000, requests: [], rejected: 0 },
     ...overrides,
   };

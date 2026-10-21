@@ -18,6 +18,7 @@ This is an exercise in agentic development using Claude Code.
   Clustered markers on top show the newest 2,000 matching requests. Click a cluster to zoom in, or a marker to see its details. The legend states each layer's scope.
 - **Filters:** date range (presets or custom), request type, current status, neighborhood (Community Reporting Area) and council district. Filters live in the URL, so any view can be shared. Every filter updates the map, metrics, charts and list together.
 - **Summary metrics:** total requests, daily average, most reported type, and the share with usable coordinates.
+- **Period-over-period change:** the total and every neighborhood/district bar show the change versus the equally long period just before, with the same filters (e.g. "▼ −2.0% vs Aug 21 – Sep 19"). When the previous count is under 20, the absolute change is shown instead of a volatile percentage. Changes use neutral arrows, not red/green, because more reports isn't necessarily worse.
 - **Trends:** requests per day, week (Mon–Sun) or month, chosen from the range length. Days with no requests are zero-filled, and buckets cut short by the range are drawn dashed and labelled.
 - **Breakdowns:** request types, current status, and an area comparison by neighborhood or council district. Neighborhoods can be compared by raw count or **per 1,000 residents** (2020 Census). Areas with fewer than 5,000 residents are listed separately rather than ranked, because their rates aren't comparable. Each bar is a keyboard-accessible button that toggles that filter.
 
@@ -121,12 +122,13 @@ src/
 
 ### Key decisions
 
-- **Aggregate on the server, never in the browser.** Each filter change triggers eight SoQL queries server-side:
+- **Aggregate on the server, never in the browser.** Each filter change triggers ten SoQL queries server-side:
   - four facet counts (type, status, area, district), each applying every filter *except its own*, so it can show the selected value among the alternatives and give the dropdown counts;
   - daily counts, rolled up into days, weeks or months;
   - a `snap_to_grid` density grid of about 550 m cells;
   - the newest 2,000 matching rows;
   - the dataset's newest timestamp.
+  - two previous-period facets (area and district), for period-over-period change.
 
   The browser receives about 76 KB gzipped, never millions of rows.
 - **Explicit data scopes.** Totals, charts, breakdowns and the density layer cover *all* matching requests. Markers and the recent list are a labelled sample of the newest 2,000. The total is derived from the type facet, and tests check that the facets and the time series sum to the same number.

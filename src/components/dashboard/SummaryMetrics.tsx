@@ -1,6 +1,7 @@
 import { countFor } from "@/lib/aggregate";
 import { daysInRange, formatShortDate } from "@/lib/dates";
 import { formatCount, formatDecimal, formatPercent } from "@/lib/format";
+import { CHANGE_ARROW, describeChange, type Change } from "@/lib/change";
 import type { DashboardData } from "@/lib/types";
 
 import { Skeleton } from "@/components/ui/Panel";
@@ -12,10 +13,12 @@ interface Metric {
   title?: string;
   /** Text values (names) use a smaller face so they can wrap. */
   text?: boolean;
+  /** Change versus the previous equal-length period, with its date range. */
+  change?: { change: Change; period: string };
 }
 
 export function buildMetrics(data: DashboardData): Metric[] {
-  const { filters, totals, facets } = data;
+  const { filters, totals, facets, comparison } = data;
   const days = daysInRange(filters.start, filters.end);
   const perDay = totals.matching / days;
   const range = `${formatShortDate(filters.start)} – ${formatShortDate(filters.end)}`;
@@ -30,6 +33,12 @@ export function buildMetrics(data: DashboardData): Metric[] {
     {
       label: "Requests reported",
       value: formatCount(totals.matching),
+      change: comparison
+        ? (() => {
+            const change = describeChange(totals.matching, comparison.matching);
+            return change ? { change, period: `${formatShortDate(comparison.start)} – ${formatShortDate(comparison.end)}` } : undefined;
+          })()
+        : undefined,
       detail: `${range} · ${formatCount(days)} ${days === 1 ? "day" : "days"}`,
     },
     {
@@ -80,6 +89,18 @@ export function SummaryMetrics({ data, loading }: { data: DashboardData | null; 
             {m.value}
           </dd>
           <dd className="mt-0.5 text-xs leading-5 text-ink-subtle">{m.detail}</dd>
+          {m.change ? (
+            <dd className="text-xs leading-5 text-ink-muted">
+              <span aria-hidden className="mr-1 text-[9px]">
+                {CHANGE_ARROW[m.change.change.direction]}
+              </span>
+              <span className="sr-only">{m.change.change.description}</span>
+              <span aria-hidden className="font-medium tabular-nums text-ink">
+                {m.change.change.text}
+              </span>
+              <span> vs {m.change.period}</span>
+            </dd>
+          ) : null}
         </div>
       ))}
     </dl>

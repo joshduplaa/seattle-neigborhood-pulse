@@ -1,5 +1,5 @@
 import { buildTimeSeries, chooseGranularity, countFor, matchingTotal } from "@/lib/aggregate";
-import type { DashboardFilters } from "@/lib/filters";
+import { previousPeriod, type DashboardFilters } from "@/lib/filters";
 import { querySocrata, type SoqlResult } from "@/lib/socrata/client";
 import { GRID_RESOLUTION, SAMPLE_LIMIT } from "@/lib/socrata/config";
 import {
@@ -36,7 +36,10 @@ export async function getDashboardData(
   query: QueryFn = (p) => querySocrata(p),
   now: () => Date = () => new Date(),
 ): Promise<DashboardData> {
-  const [category, status, area, district, daily, grid, sample, newest] = await Promise.all([
+  const previous = previousPeriod(filters);
+  const empty = Promise.resolve({ rows: [] as unknown[], lastModified: null });
+
+  const [category, status, area, district, daily, grid, sample, newest, prevArea, prevDistrict] = await Promise.all([
     query(facetQuery(filters, "category")),
     query(facetQuery(filters, "status")),
     query(facetQuery(filters, "area")),
@@ -45,6 +48,8 @@ export async function getDashboardData(
     query(gridQuery(filters)),
     query(sampleQuery(filters, SAMPLE_LIMIT)),
     query(newestRecordQuery()),
+    previous ? query(facetQuery(previous, "area")) : empty,
+    previous ? query(facetQuery(previous, "district")) : empty,
   ]);
 
   const facets = {
@@ -70,6 +75,19 @@ export async function getDashboardData(
       withoutArea: areaMatching,
     },
     facets,
+    comparison: previous
+      ? (() => {
+          const prevAreaFacet = normalizeFacet(prevArea.rows);
+          return {
+            start: previous.start,
+            end: previous.end,
+            // The area facet ignores only the area filter, so it also yields the previous total.
+            matching: matchingTotal(prevAreaFacet, filters.area),
+            area: prevAreaFacet,
+            district: normalizeFacet(prevDistrict.rows),
+          };
+        })()
+      : null,
     series: {
       granularity,
       points: buildTimeSeries(normalizeDailyCounts(daily.rows), filters.start, filters.end, granularity),
