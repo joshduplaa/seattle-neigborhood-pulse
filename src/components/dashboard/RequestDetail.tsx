@@ -51,7 +51,7 @@ export const RequestDetail = forwardRef<HTMLElement, RequestDetailProps>(functio
         <dl className="divide-y divide-line/70 px-4 py-2">
           <Row label="Reported" value={`${formatLocalTimestamp(request.createdAt)} (Seattle time)`} />
           <Row label="Current status" value={request.status} />
-          <Row label="Address" value={request.address} />
+          <Row label="Address" value={request.locationWithheld ? "Withheld for privacy" : request.address} />
           <Row label="Neighborhood" value={request.area ? formatAreaName(request.area) : null} />
           <Row label="Council district" value={request.councilDistrict ? formatDistrict(request.councilDistrict) : null} />
           <Row label="ZIP code" value={request.zip} />
@@ -59,7 +59,12 @@ export const RequestDetail = forwardRef<HTMLElement, RequestDetailProps>(functio
           <Row label="Department" value={formatDepartment(request.department)} />
           <Row label="Received via" value={request.method} />
           <Row label="Request number" value={request.id} />
-          {!request.coordinates ? (
+          {request.locationWithheld ? (
+            <p className="py-2 text-[13px] leading-5 text-ink-subtle">
+              Exact locations of encampment reports aren&apos;t shown, to avoid making it easier to target unhoused people. This report still
+              counts toward neighborhood totals, charts and the density layer.
+            </p>
+          ) : !request.coordinates ? (
             <p className="py-2 text-[13px] text-ink-subtle">This request has no usable coordinates, so it is not shown on the map.</p>
           ) : null}
         </dl>

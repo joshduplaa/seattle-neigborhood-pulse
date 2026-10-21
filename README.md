@@ -25,6 +25,7 @@ This is an exercise in agentic development using Claude Code.
 
   The count / per-capita choice drives the map shading too.
 - **Recent requests:** newest first and paged. Selecting one flies the map to it and opens its detail card. Requests without coordinates are listed and flagged, never placed on the map.
+- **Privacy:** encampment reports never expose an address or exact point. The server strips both before responding, keeping the neighborhood, district and ZIP. They still count in every aggregate.
 - **Loading, empty, partial and error states** throughout. If a refresh fails, the last good results stay visible with a retry button.
 
 ![Selected request detail with the map focused on its location](docs/request-detail.png)
@@ -161,7 +162,7 @@ src/
 ## Verification
 
 - **CI:** [GitHub Actions](.github/workflows/ci.yml) runs `npm ci`, `npm run check` and `npm run build` on Node 24 for every pull request and every push to `main`.
-- `npm run typecheck`, `npm run lint`, `npm test` (98 tests) and `npm run build` all pass.
+- `npm run typecheck`, `npm run lint`, `npm test` (101 tests) and `npm run build` all pass.
 - Tests cover date maths (DST, leap years, Seattle "today"), filter parsing and clamping, SoQL building and escaping, normalization against **real captured API responses** (`src/lib/__fixtures__/`), malformed input, time-series bucketing and partial buckets, cache behaviour, HTTP client retry and error classification, the API route's error mapping and gzip, and key components.
 - Headless Chrome was used to check the main flows (select from list, filter via bars, area fit, presets), the empty and error states, layout at 390 px, 820 px, 1280 px and 1440 px (no horizontal overflow), and axe-core WCAG 2.1 AA (0 violations).
 
@@ -170,6 +171,7 @@ src/
 - **Counts are reports, not problems.** Several residents may report one issue; the duplicate statuses capture only some of these.
 - **Per-capita rates are approximate.** They use 2020 Census residents. Requests also come from workers and visitors, so commercial areas still rank high, and areas under 5,000 residents aren't ranked. Council districts have no population data here, so their comparison is counts only.
 - **Response times cover five request types only**, measured to the City's first "Closed" status update. "Closed" includes duplicates, vehicles that couldn't be located or had moved, and reports forwarded elsewhere, so it isn't proof of a fix. Dates are whole days, and created dates are approximate in the tracking data. Neighborhood, district and status filters don't apply to this panel.
+- **Encampment locations are withheld by design.** The source publishes them, but this app only shows them at neighborhood or ~550 m density level, because a map of every reported encampment's address is easy to misuse against unhoused people. The rule lives in `LOCATION_WITHHELD_TYPES` in [`src/lib/socrata/config.ts`](src/lib/socrata/config.ts).
 - **Markers are a sample** (newest 2,000 matching requests). The density layer and every count use the full data.
 - **Boundaries are simplified** to about 10 m for size, so edges are approximate at street level.
 - **Freshness depends on the City.** The source updates about once a day. "Source updated" is the API's `Last-Modified` header.

@@ -48,6 +48,15 @@ export const SEATTLE_BOUNDS = {
   maxLon: -122.2,
 } as const;
 
+/**
+ * Request types whose individual address and exact coordinates are never
+ * sent to the browser. The data is public, but a polished map of every
+ * reported encampment's address is easy to misuse against unhoused people.
+ * These requests still count in every aggregate (totals, charts,
+ * neighborhood shading and the ~550 m density grid).
+ */
+export const LOCATION_WITHHELD_TYPES: ReadonlySet<string> = new Set(["Unauthorized Encampment"]);
+
 /** Most recent requests returned for the map markers and the recent list. */
 export const SAMPLE_LIMIT = 2000;
 

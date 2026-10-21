@@ -15,8 +15,13 @@ export interface ServiceRequest {
   status: string | null;
   method: string | null;
   address: string | null;
-  /** `null` when the source has no coordinates or they fall outside Seattle. */
+  /**
+   * `null` when the source has no coordinates, they fall outside Seattle, or
+   * the location is withheld for privacy.
+   */
   coordinates: Coordinates | null;
+  /** True when the address and coordinates were removed for privacy (see LOCATION_WITHHELD_TYPES). */
+  locationWithheld: boolean;
   zip: string | null;
   councilDistrict: string | null;
   precinct: string | null;
