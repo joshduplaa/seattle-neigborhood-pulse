@@ -4,7 +4,8 @@ import { useId } from "react";
 
 import { DATASET_START_DATE } from "@/lib/socrata/config";
 import { DATE_PRESETS, matchPreset, presetRange, type DashboardFilters } from "@/lib/filters";
-import { formatAreaName, formatCount, formatDistrict } from "@/lib/format";
+import { NeighborhoodSearch } from "@/components/dashboard/NeighborhoodSearch";
+import { formatCount, formatDistrict } from "@/lib/format";
 import type { FacetBucket } from "@/lib/types";
 
 interface FilterBarProps {
@@ -157,11 +158,9 @@ export function FilterBar({ filters, today, facets, onChange, onClear, isDefault
             onChange={(status) => onChange({ status })}
             disabled={noOptions}
           />
-          <SelectField
-            label="Neighborhood"
+          <NeighborhoodSearch
             value={filters.area}
-            allLabel="All neighborhoods"
-            options={facetOptions(facets?.area, filters.area, formatAreaName)}
+            counts={facets?.area ?? null}
             onChange={(area) => onChange({ area })}
             disabled={noOptions}
           />
