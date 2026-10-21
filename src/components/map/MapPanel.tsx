@@ -56,6 +56,7 @@ export function MapPanel({ data, loading, error, selectedId, focus, measure, onS
   const cells = data?.grid.cells ?? [];
   const requests = data?.sample.requests ?? [];
   const mapped = requests.filter((r) => r.coordinates).length;
+  const withheld = requests.filter((r) => r.locationWithheld).length;
   const matching = data?.totals.matching ?? 0;
   const geolocated = data?.totals.geolocated ?? 0;
   const fitKey = data ? `${data.filters.area ?? ""}|${data.filters.district ?? ""}` : "|";
@@ -194,6 +195,12 @@ export function MapPanel({ data, loading, error, selectedId, focus, measure, onS
                   <span aria-hidden className="size-2.5 rounded-full bg-ferry ring-2 ring-surface" /> selected
                 </span>
               </span>
+              {withheld > 0 ? (
+                <span className="mt-1 block text-[11px] text-ink-subtle">
+                  {formatCount(withheld)} encampment {withheld === 1 ? "report isn't" : "reports aren't"} shown as points, for privacy. They still
+                  count in the shading and density.
+                </span>
+              ) : null}
             </span>
           </label>
         </div>
